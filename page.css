@@ -1,0 +1,186 @@
+
+:root {
+  --bg: #F6F2EC;
+  --sidebar: #30251F;
+  --sidebar-text: #D8C9B9;
+  --brown: #79563E;
+  --bronze: #B18A65;
+  --cream: #EDE4D9;
+  --card: #FFFDFA;
+  --text: #302820;
+  --muted: #958A7F;
+  --border: #E9E0D5;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 245px;
+  min-height: 100vh;
+  background: var(--sidebar);
+  color: white;
+  padding: 28px 18px;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 8px 12px 45px;
+}
+
+.nav-item {
+  display: block;
+  width: 100%;
+  padding: 13px 15px;
+  margin-bottom: 8px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  background: #514034;
+  color: white;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 32px 42px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+h1 {
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+h2 {
+  font-size: 19px;
+  margin-bottom: 16px;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 23px;
+  margin-bottom: 20px;
+}
+
+.chat-card {
+  margin-top: 25px;
+  padding: 18px;
+}
+
+.chat-input {
+  width: 100%;
+  min-height: 55px;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  font-size: 15px;
+  background: white;
+}
+
+.chat-input:focus {
+  border-color: var(--bronze);
+}
+
+button {
+  cursor: pointer;
+}
+
+.agent-grid,
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.agent-card {
+  background: var(--card);
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 13px;
+}
+
+.toggle {
+  accent-color: var(--brown);
+}
+
+.workflow {
+  padding: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 10px 0 15px;
+}
+
+.footer {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 35px;
+}
+
+@media (max-width: 800px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .main {
+    padding: 24px 18px;
+  }
+}

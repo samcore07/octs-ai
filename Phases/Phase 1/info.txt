@@ -1,0 +1,10 @@
+Title: Experimental setup and Basic Startup 
+
+Frontend (index.html & script.js)
+Provides an interactive UI text box. script.js captures user input, dispatches an asynchronous HTTP request (fetch) to the backend, and dynamically renders the streamed/returned response in the app.
+
+API Layer (FastAPI)
+Acts as the application gateway. Receives payload requests from the frontend, manages endpoint routing, handles request/response parsing, and forwards requests to the inference module.
+
+LLM Server (server.py)
+Interfaces directly with the Large Language Model (LLM). Processes the incoming prompt context (including info.txt), executes model inference, and returns the generated output back through the FastAPI pipeline to the client.
