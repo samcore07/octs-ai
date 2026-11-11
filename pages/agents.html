@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harness AI | Agents</title>
+    <link rel="stylesheet" href="css/agents.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">harness<span>.</span></div>
+            <div class="nav-label">MAIN MENU</div>
+            <nav aria-label="Main navigation">
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>Home
+                </a>
+                <a class="nav-item active" href="agents.html" aria-current="page">
+                    <span class="nav-icon">◈</span>Agents
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>Workflows
+                </a>
+                <a class="nav-item" href="analytics.html">
+                    <span class="nav-icon">▥</span>Analytics
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                <div class="breadcrumb">Workspace / Agents</div>
+                <div class="profile-small">
+                    <div class="avatar" id="smallAvatar">U</div>
+                    <span id="topName">User</span>
+                </div>
+            </header>
+
+            <section class="section active" id="agents">
+                <div class="eyebrow">INTELLIGENCE / AGENT MANAGEMENT</div>
+
+                <h1>Agent Control</h1>
+
+                <p class="description">
+                    Manage specialized AI agents and configure which capabilities are available to your harness.
+                </p>
+
+                <div class="agent-grid">
+                    <div class="agent-card">
+                        <div class="agent-top">
+                            <div class="agent-icon">◈</div>
+                            <span class="tag">01 / CORE</span>
+                        </div>
+                        <h3>Planning Agent</h3>
+                        <p>Breaks down objectives into structured tasks and execution plans.</p>
+                        <div class="agent-footer">
+                            <span>Enable agent</span>
+                            <input class="toggle" type="checkbox" checked>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-top">
+                            <div class="agent-icon">⌕</div>
+                            <span class="tag">02 / CORE</span>
+                        </div>
+                        <h3>Research Agent</h3>
+                        <p>Collects information, investigates problems and analyzes context.</p>
+                        <div class="agent-footer">
+                            <span>Enable agent</span>
+                            <input class="toggle" type="checkbox" checked>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-top">
+                            <div class="agent-icon">✎</div>
+                            <span class="tag">03 / CORE</span>
+                        </div>
+                        <h3>Writing Agent</h3>
+                        <p>Creates structured content, documentation and written outputs.</p>
+                        <div class="agent-footer">
+                            <span>Enable agent</span>
+                            <input class="toggle" type="checkbox" checked>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-top">
+                            <div class="agent-icon">⌘</div>
+                            <span class="tag">04 / CORE</span>
+                        </div>
+                        <h3>Execution Agent</h3>
+                        <p>Coordinates task execution and manages assigned operations.</p>
+                        <div class="agent-footer">
+                            <span>Enable agent</span>
+                            <input class="toggle" type="checkbox" checked>
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-top">
+                            <div class="agent-icon">◎</div>
+                            <span class="tag">05 / OPTIONAL</span>
+                        </div>
+                        <h3>Validation Agent</h3>
+                        <p>Checks outputs for errors, consistency and quality.</p>
+                        <div class="agent-footer">
+                            <span>Enable agent</span>
+                            <input class="toggle" type="checkbox">
+                        </div>
+                    </div>
+
+                    <div class="agent-card">
+                        <div class="agent-top">
+                            <div class="agent-icon">⟳</div>
+                            <span class="tag">06 / OPTIONAL</span>
+                        </div>
+                        <h3>Recovery Agent</h3>
+                        <p>Supports recovery and alternative execution when a task fails.</p>
+                        <div class="agent-footer">
+                            <span>Enable agent</span>
+                            <input class="toggle" type="checkbox">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="footer">HARNESS AI / INTELLIGENT EXECUTION ENVIRONMENT</footer>
+        </main>
+    </div>
+
+    <script src="js/agents.js" defer></script>
+</body>
+</html>
