@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Failures & Recovery | Generative Clash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/failures.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="brand-wrapper">
+                    <div class="brand-icon">GC</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Generative Clash</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-role-indicator" id="sidebarRoleIndicator" style="display: none;">
+                <span class="role-badge-pill" id="sidebarRoleText">Writers</span>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="agents.html">
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
+                </a>
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item" href="efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item active" href="failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                    <span class="nav-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">0 Halts</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item" href="help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item" href="settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="settings.html" class="profile-card">
+                    <div class="user-avatar" id="sidebarAvatar">A</div>
+                    <div class="user-details">
+                        <span class="user-name" id="topName">Alex</span>
+                        <span class="user-role-label">Creative Director</span>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <header class="topbar">
+                <div class="topbar-breadcrumb">
+                    <a href="../index.html" class="breadcrumb-root">Generative Clash</a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Failures & Recovery</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>0 UNHANDLED HALTS</span>
+                    </div>
+                    <a href="../index.html" id="topbarRoleBtn" class="topbar-role-btn" style="display: none;">
+                        <span>✦</span>
+                        <span id="topbarRoleName">Role</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-container">
+                <div class="page-header-box">
+                    <h1 class="page-title">Failure Intelligence & Recovery Engine</h1>
+                    <p class="page-desc">The AI Harness autonomously catches logic contradictions, context gaps, and formatting deviations, recovering instantly instead of halting your creative session.</p>
+                    <span class="telemetry-badge">● Self-Correction Telemetry (Demo Data)</span>
+                </div>
+
+                <div class="stats-metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Detected Context Gaps</div>
+                        <div class="metric-value" style="color: var(--warning);">4</div>
+                        <div class="metric-subnote">All 4 recovered automatically</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Self-Correction Rate</div>
+                        <div class="metric-value" style="color: var(--success);">100%</div>
+                        <div class="metric-subnote">4/4 loops successful</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Unhandled Halts</div>
+                        <div class="metric-value">0</div>
+                        <div class="metric-subnote">Zero user interruptions</div>
+                    </div>
+                </div>
+
+                <div class="recovery-log-box">
+                    <div class="log-header-strip">
+                        <span>Autonomous Recovery Audit Log</span>
+                        <span>Real-Time Stream</span>
+                    </div>
+                    <div class="log-item">
+                        <span class="log-time">14:22:04</span>
+                        <span class="log-tag">RECOVERED</span>
+                        <div class="log-content">
+                            <strong>Context Gap in Protagonist Motive (Writers):</strong>
+                            <div class="log-recovery-desc">Narrative agent flagged that character's decision in Act 2 was unearned by backstory. Triggered internal continuity loop to supply missing motivation anchor without halting draft.</div>
+                        </div>
+                    </div>
+                    <div class="log-item">
+                        <span class="log-time">11:15:39</span>
+                        <span class="log-tag">RECOVERED</span>
+                        <div class="log-content">
+                            <strong>Syllable Stress Collision (Musicians):</strong>
+                            <div class="log-recovery-desc">Lyric engine detected unnatural metric accent on bar 4 beat 2. Re-ran meter polish loop to substitute iambic phrasing while preserving rhyme scheme.</div>
+                        </div>
+                    </div>
+                    <div class="log-item">
+                        <span class="log-time">09:41:18</span>
+                        <span class="log-tag">RECOVERED</span>
+                        <div class="log-content">
+                            <strong>Contrast Ratio Deviation (Designers):</strong>
+                            <div class="log-recovery-desc">Visual system auditor caught a 3.8:1 text contrast ratio on white surface. Autonomously adjusted token luminance to achieve WCAG AAA compliance (7.2:1).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js" defer></script>
+    <script src="js/failures.js" defer></script>
+</body>
+</html>

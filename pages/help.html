@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & Support | Generative Clash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/help.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="brand-wrapper">
+                    <div class="brand-icon">GC</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Generative Clash</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-role-indicator" id="sidebarRoleIndicator" style="display: none;">
+                <span class="role-badge-pill" id="sidebarRoleText">Writers</span>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="agents.html">
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
+                </a>
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item" href="efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item" href="failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                    <span class="nav-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">0 Halts</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item active" href="help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item" href="settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="settings.html" class="profile-card">
+                    <div class="user-avatar" id="sidebarAvatar">A</div>
+                    <div class="user-details">
+                        <span class="user-name" id="topName">Alex</span>
+                        <span class="user-role-label">Creative Director</span>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <header class="topbar">
+                <div class="topbar-breadcrumb">
+                    <a href="../index.html" class="breadcrumb-root">Generative Clash</a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Help & Support</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>DOCUMENTATION v2.4</span>
+                    </div>
+                    <a href="../index.html" id="topbarRoleBtn" class="topbar-role-btn" style="display: none;">
+                        <span>✦</span>
+                        <span id="topbarRoleName">Role</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-container">
+                <div class="page-header-box">
+                    <h1 class="page-title">Help & Creative Harness Architecture</h1>
+                    <p class="page-desc">Comprehensive reference guide on how the AI Harness coordinates specialized agents and breaks creative roadblocks.</p>
+                </div>
+
+                <div class="help-card">
+                    <h3>The Creative Harness Philosophy</h3>
+                    <p>
+                        Generic AI chatbots fail creators because they lack domain context, produce ungrounded generic prose, and hallucinate without self-auditing. <strong>Generative Clash</strong> solves this by deploying profession-specific harness layers:
+                    </p>
+                    <ol class="steps-list">
+                        <li><strong>Domain Personalization:</strong> Selecting your category (Writers, Musicians, Creators, Designers) arms specialized agent personas.</li>
+                        <li><strong>Intent & Problem Isolation:</strong> The dispatcher decomposes your prompt to identify whether you need structural expansion, tone refinement, or creative unblocking.</li>
+                        <li><strong>Continuous Verification:</strong> Outputs are monitored against craft constraints before display.</li>
+                    </ol>
+                </div>
+
+                <div class="help-card">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="shortcuts-grid">
+                        <div class="shortcut-item">
+                            <span>Execute with Harness</span>
+                            <span class="key-badge">Cmd / Ctrl + Enter</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>New Line in Chatbox</span>
+                            <span class="key-badge">Shift + Enter</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Toggle Sidebar</span>
+                            <span class="key-badge">Click Toggle Icon</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <span>Switch Role Category</span>
+                            <span class="key-badge">Click "Change Role"</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js" defer></script>
+    <script src="js/help.js" defer></script>
+</body>
+</html>

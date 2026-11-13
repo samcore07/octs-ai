@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Efficiency | Generative Clash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/efficiency.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="brand-wrapper">
+                    <div class="brand-icon">GC</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Generative Clash</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-role-indicator" id="sidebarRoleIndicator" style="display: none;">
+                <span class="role-badge-pill" id="sidebarRoleText">Writers</span>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="agents.html">
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
+                </a>
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item active" href="efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item" href="failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                    <span class="nav-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">0 Halts</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item" href="help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item" href="settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="settings.html" class="profile-card">
+                    <div class="user-avatar" id="sidebarAvatar">A</div>
+                    <div class="user-details">
+                        <span class="user-name" id="topName">Alex</span>
+                        <span class="user-role-label">Creative Director</span>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <header class="topbar">
+                <div class="topbar-breadcrumb">
+                    <a href="../index.html" class="breadcrumb-root">Generative Clash</a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Efficiency</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>TELEMETRY STREAM ACTIVE</span>
+                    </div>
+                    <a href="../index.html" id="topbarRoleBtn" class="topbar-role-btn" style="display: none;">
+                        <span>✦</span>
+                        <span id="topbarRoleName">Role</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-container">
+                <div class="page-header-box">
+                    <h1 class="page-title">Harness Execution Efficiency</h1>
+                    <p class="page-desc">Telemetry benchmarks quantifying latency distributions, pipeline throughput, and token utilization efficiency across all creative models.</p>
+                    <span class="telemetry-badge">● Live Performance Telemetry (Demo Data)</span>
+                </div>
+
+                <div class="stats-metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Average Latency</div>
+                        <div class="metric-value">385ms</div>
+                        <div class="metric-subnote">↑ 18% faster than baseline</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Token Density</div>
+                        <div class="metric-value">94.8%</div>
+                        <div class="metric-subnote">Zero prompt bloat</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Concurrent Threads</div>
+                        <div class="metric-value">12/12</div>
+                        <div class="metric-subnote">Zero thread starvation</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">API Health Score</div>
+                        <div class="metric-value">99.98%</div>
+                        <div class="metric-subnote">Gemini Flash Lite API</div>
+                    </div>
+                </div>
+
+                <div class="analytics-charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">
+                            <span>Latency Distribution by Day (ms)</span>
+                            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Industrial Benchmark</span>
+                        </div>
+                        <div class="chart-bar-container">
+                            <div class="chart-col"><div class="chart-bar" style="height: 65%;"></div><span class="chart-label">Mon</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 80%;"></div><span class="chart-label">Tue</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 55%;"></div><span class="chart-label">Wed</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 70%;"></div><span class="chart-label">Thu</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 90%;"></div><span class="chart-label">Fri</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 45%;"></div><span class="chart-label">Sat</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 60%;"></div><span class="chart-label">Sun</span></div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-title">
+                            <span>Execution Throughput (Tasks/Day)</span>
+                            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">Weekly Volume</span>
+                        </div>
+                        <div class="chart-bar-container">
+                            <div class="chart-col"><div class="chart-bar" style="height: 40%; background: var(--accent);"></div><span class="chart-label">Mon</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 65%; background: var(--accent);"></div><span class="chart-label">Tue</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 85%; background: var(--accent);"></div><span class="chart-label">Wed</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 75%; background: var(--accent);"></div><span class="chart-label">Thu</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 95%; background: var(--accent);"></div><span class="chart-label">Fri</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 50%; background: var(--accent);"></div><span class="chart-label">Sat</span></div>
+                            <div class="chart-col"><div class="chart-bar" style="height: 70%; background: var(--accent);"></div><span class="chart-label">Sun</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js" defer></script>
+    <script src="js/efficiency.js" defer></script>
+</body>
+</html>

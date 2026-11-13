@@ -3,81 +3,396 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harness AI | Workspace</title>
+    <title>Generative Clash | AI Creative Harness</title>
+    <!-- Google Fonts for Swiss Tech Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="app">
+    <div class="app-layout">
+        <!-- =================================================================
+             Left Sidebar (Fixed & Collapsible)
+             ================================================================= -->
         <aside class="sidebar">
-            <div class="logo">harness<span>.</span></div>
-            <div class="nav-label">MAIN MENU</div>
-            <nav aria-label="Main navigation">
-                <a class="nav-item active" href="index.html" aria-current="page">
-                    <span class="nav-icon">⌂</span>Home
+            <div class="sidebar-header">
+                <a href="index.html" class="brand-wrapper">
+                    <div class="brand-icon">GC</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Generative Clash</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Active Role Indicator in Sidebar -->
+            <div class="sidebar-role-indicator" id="sidebarRoleIndicator" style="display: none;">
+                <span class="role-badge-pill" id="sidebarRoleText">Writers & Storytellers</span>
+                <button class="clear-btn" onclick="switchRole()" title="Switch Role" style="padding: 2px 6px; font-size: 10px;">Switch</button>
+            </div>
+
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item active" href="index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
                 </a>
                 <a class="nav-item" href="pages/agents.html">
-                    <span class="nav-icon">◈</span>Agents
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
                 </a>
                 <a class="nav-item" href="pages/workflows.html">
-                    <span class="nav-icon">⇄</span>Workflows
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
                 </a>
-                <a class="nav-item" href="pages/analytics.html">
-                    <span class="nav-icon">▥</span>Analytics
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item" href="pages/efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="pages/success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item" href="pages/failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                    <span class="nav-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">0 Halts</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item" href="pages/help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item" href="pages/settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
                 </a>
             </nav>
+
+            <!-- Sidebar Footer Profile -->
+            <div class="sidebar-footer">
+                <a href="pages/settings.html" class="profile-card" title="Manage Profile Settings">
+                    <div class="user-avatar" id="sidebarAvatar">A</div>
+                    <div class="user-details">
+                        <span class="user-name" id="topName">Alex</span>
+                        <span class="user-role-label">Creative Director</span>
+                    </div>
+                </a>
+            </div>
         </aside>
 
-        <main class="main">
+        <!-- =================================================================
+             Main Viewport & Topbar
+             ================================================================= -->
+        <main class="main-viewport">
             <header class="topbar">
-                <div class="breadcrumb">Workspace / Home</div>
-                <div class="profile-small">
-                    <div class="avatar" id="smallAvatar">U</div>
-                    <span id="topName">User</span>
+                <div class="topbar-breadcrumb">
+                    <span class="breadcrumb-root">Generative Clash</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current" id="breadcrumbCurrent">Dashboard</span>
+                </div>
+
+                <div class="topbar-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>FASTAPI / GEMINI ONLINE</span>
+                    </div>
+
+                    <button id="topbarRoleBtn" class="topbar-role-btn" onclick="switchRole()" style="display: none;">
+                        <span>✦</span>
+                        <span id="topbarRoleName">Role</span>
+                        <span style="color: var(--text-muted); font-size: 10px;">(Change)</span>
+                    </button>
                 </div>
             </header>
 
-            <section class="section active" id="home">
-                
-
-                
-
-                
-
-                <!-- CHAT BAR -->
-                <div class="card chat-card">
-                    <div class="chat-heading">
-                        <div class="panel-title">Start a conversation</div>
-                        <span class="chat-status">● AI WORKSPACE</span>
+            <div class="content-container">
+                <!-- =========================================================
+                     SCREEN 1: WELCOME & ROLE SELECTION (Uncluttered)
+                     ========================================================= -->
+                <div class="welcome-screen" id="rolePickerScreen">
+                    <div class="welcome-hero">
+                        <h1 class="welcome-greeting">Hey, <span class="username-highlight" id="displayUsername">Alex</span>!</h1>
+                        <p class="welcome-subtitle">
+                            Your creative workspace is ready. What do you create?
+                        </p>
+                        <div class="welcome-question-wrapper">
+                            <span class="welcome-question">Which role best describes you?</span>
+                            <span class="welcome-question-note">Select your domain to personalize specialized agents and workflows.</span>
+                        </div>
                     </div>
 
-                    <textarea
-                        id="chatInput"
-                        class="chat-input"
-                        placeholder="Ask Harness AI anything... Describe your task, goal, or problem."
-                    ></textarea>
+                    <!-- 4 Category Cards -->
+                    <div class="category-cards-grid">
+                        <!-- Category 1: Writers & Storytellers -->
+                        <div class="role-card" data-role="writers">
+                            <div class="role-card-header">
+                                <div class="role-icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                                        <path d="M2 2l7.586 7.586"></path>
+                                        <circle cx="11" cy="11" r="2"></circle>
+                                    </svg>
+                                </div>
+                                <span class="role-card-badge">Narrative Engine</span>
+                            </div>
+                            <h3>Writers & Storytellers</h3>
+                            <p>Ideas, storytelling, research and writing assistance.</p>
+                            <div class="role-challenges-preview">
+                                <span class="challenge-tag">Writer's Block</span>
+                                <span class="challenge-tag">Plot Development</span>
+                                <span class="challenge-tag">Lore Continuity</span>
+                                <span class="challenge-tag">Dialogue Refinement</span>
+                            </div>
+                            <div class="role-select-action">
+                                <span>Enter Workspace</span>
+                                <span>→</span>
+                            </div>
+                        </div>
 
-                    <div class="chat-footer">
-                        <span class="hint"></span>
-                        <button class="primary-btn" id="sendBtn" onclick="submitTask()">
-                            Start execution →
-                        </button>
+                        <!-- Category 2: Musicians & Singers -->
+                        <div class="role-card" data-role="musicians">
+                            <div class="role-card-header">
+                                <div class="role-icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 18V5l12-2v13"></path>
+                                        <circle cx="6" cy="18" r="3"></circle>
+                                        <circle cx="18" cy="16" r="3"></circle>
+                                    </svg>
+                                </div>
+                                <span class="role-card-badge">Harmonic Lab</span>
+                            </div>
+                            <h3>Musicians & Singers</h3>
+                            <p>Music creation, songwriting and creative experimentation.</p>
+                            <div class="role-challenges-preview">
+                                <span class="challenge-tag">Songwriting Sparks</span>
+                                <span class="challenge-tag">Rhyme & Meter</span>
+                                <span class="challenge-tag">Chord Progressions</span>
+                                <span class="challenge-tag">Dynamic Bridges</span>
+                            </div>
+                            <div class="role-select-action">
+                                <span>Enter Workspace</span>
+                                <span>→</span>
+                            </div>
+                        </div>
+
+                        <!-- Category 3: Content Creators -->
+                        <div class="role-card" data-role="creators">
+                            <div class="role-card-header">
+                                <div class="role-icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                                    </svg>
+                                </div>
+                                <span class="role-card-badge">Audience Growth</span>
+                            </div>
+                            <h3>Content Creators</h3>
+                            <p>Content planning, scripting, publishing and audience growth.</p>
+                            <div class="role-challenges-preview">
+                                <span class="challenge-tag">Retention Hooks</span>
+                                <span class="challenge-tag">Script Pacing</span>
+                                <span class="challenge-tag">Cross-Platform Adapters</span>
+                                <span class="challenge-tag">Batch Scheduling</span>
+                            </div>
+                            <div class="role-select-action">
+                                <span>Enter Workspace</span>
+                                <span>→</span>
+                            </div>
+                        </div>
+
+                        <!-- Category 4: Visual Artists & Designers -->
+                        <div class="role-card" data-role="designers">
+                            <div class="role-card-header">
+                                <div class="role-icon-box">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83m13.79-4l-5.74 9.94"></path>
+                                    </svg>
+                                </div>
+                                <span class="role-card-badge">Design Studio</span>
+                            </div>
+                            <h3>Visual Artists & Designers</h3>
+                            <p>Design workflows, visual ideation and creative exploration.</p>
+                            <div class="role-challenges-preview">
+                                <span class="challenge-tag">Concept Metaphors</span>
+                                <span class="challenge-tag">Art Direction Briefs</span>
+                                <span class="challenge-tag">System Audits</span>
+                                <span class="challenge-tag">Design Token Scales</span>
+                            </div>
+                            <div class="role-select-action">
+                                <span>Enter Workspace</span>
+                                <span>→</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="response-box">
-                    <div class="response-header">
-                        <span class="response-title">Output</span>
-                        <button class="copy-btn" id="copyBtn" onclick="copyResponse()">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            Copy
-                        </button>
+                <!-- -----------------------------------------------------
+                     SCREEN 2: DYNAMIC ROLE-BASED WORKSPACE
+                     ----------------------------------------------------- -->
+                <div class="active-workspace-view" id="roleWorkspaceScreen">
+                    <!-- Personalized Workspace Banner -->
+                    <div class="workspace-header-card">
+                        <div class="workspace-header-main">
+                            <h2 id="workspaceRoleTitle">Welcome to your workspace.</h2>
+                            <p id="workspaceRoleDesc">
+                                Your AI harness coordinates specialized domain agents to resolve creative bottlenecks and accelerate execution.
+                            </p>
+                        </div>
+                        <div class="workspace-header-actions">
+                            <button class="switch-role-btn" id="switchRoleBtn">
+                                <span>⇄</span>
+                                <span>Change Category</span>
+                            </button>
+                        </div>
                     </div>
-                    <div id="output" class="response-content">Response will appear here...</div>
+
+                    <!-- Specialized Agent Coordination Ribbon -->
+                    <div class="agent-coordination-ribbon">
+                        <div class="coordination-label">
+                            <span>Coordinating Agents:</span>
+                        </div>
+                        <div class="coordination-agents-list" id="coordinationAgentsList">
+                            <!-- Populated dynamically by script.js -->
+                        </div>
+                        <span class="harness-status-pill">● Auto-Recovery Armed</span>
+                    </div>
+
+                    <!-- =================================================
+                         AI Harness Interaction Area
+                         ================================================= -->
+                    <div class="harness-interaction-panel">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <span class="panel-title">AI Creative Harness</span>
+                                <span class="panel-subtitle-mono">/ Multi-Agent Dispatcher</span>
+                            </div>
+                            <div class="panel-status">
+                                <span class="status-dot" style="background-color: var(--success);"></span>
+                                <span>Context Aware</span>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Suggested Prompts based on Role -->
+                        <div class="suggested-prompts-section">
+                            <div class="suggested-label">Suggested Creative Directives:</div>
+                            <div class="prompt-chips-grid" id="suggestedPromptsGrid">
+                                <!-- Populated dynamically by script.js -->
+                            </div>
+                        </div>
+
+                        <!-- Chat / Prompt Input Area -->
+                        <div class="chat-input-wrapper">
+                            <textarea
+                                id="chatInput"
+                                class="chat-input"
+                                placeholder="Tell your AI harness what you're trying to create..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Input Action & Pipeline Helper Bar -->
+                        <div class="input-helper-bar">
+                            <div class="pipeline-flow-indicator" id="pipelineIndicator">
+                                <span class="pipeline-step active">Input</span> → 
+                                <span class="pipeline-step">Intent</span> → 
+                                <span class="pipeline-step">Coordinating Agents</span> → 
+                                <span class="pipeline-step">Verification</span>
+                            </div>
+                            <div class="action-buttons-group">
+                                <button class="clear-btn" onclick="clearPromptInput()">Clear</button>
+                                <button class="primary-btn" id="sendBtn" onclick="submitTask()">
+                                    <span>Execute with Harness</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- =================================================
+                         Dark AI Console (Execution Output Area)
+                         ================================================= -->
+                    <div class="dark-console-box">
+                        <div class="console-topbar">
+                            <div class="console-title-wrap">
+                                <div class="console-terminal-dots">
+                                    <span class="term-dot" style="background-color: #EF4444;"></span>
+                                    <span class="term-dot" style="background-color: #F59E0B;"></span>
+                                    <span class="term-dot" style="background-color: #10B981;"></span>
+                                </div>
+                                <span class="console-title">Execution Console / AI Output</span>
+                            </div>
+                            <div class="console-actions">
+                                <span class="console-status-pill" id="consoleStatusPill">● Ready</span>
+                                <button class="copy-btn" id="copyBtn" onclick="copyResponse()">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    <span>Copy Output</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Telemetry Bar -->
+                        <div class="console-telemetry-bar">
+                            <div class="telemetry-item">
+                                <span>Engine:</span>
+                                <strong>Gemini 3.5 Flash Lite</strong>
+                            </div>
+                            <div class="telemetry-item">
+                                <span>Latency:</span>
+                                <strong id="latencyBadge">--</strong>
+                            </div>
+                            <div class="telemetry-item">
+                                <span>Self-Correction:</span>
+                                <strong>0 Loops</strong>
+                            </div>
+                            <div class="telemetry-item">
+                                <span>Verification:</span>
+                                <strong style="color: #34D399;">Active</strong>
+                            </div>
+                        </div>
+
+                        <!-- The Output Container (Connected to server.py) -->
+                        <div id="output" class="console-content empty-state">AI Creative Harness output will appear here after task execution...</div>
+
+                        <div class="console-footer-info">
+                            <span>HARNESS ENGINE: INDUSTRIAL LAB v2.4</span>
+                            <span>FASTAPI BACKEND CONNECTED</span>
+                        </div>
+                    </div>
+
+                    <!-- Specialized Creative Problem-Solving Toolkit -->
+                    <div class="role-toolkit-section">
+                        <div class="section-heading-bar">
+                            <span class="section-title">Domain Challenge Blueprints</span>
+                            <span class="section-tag">Direct Agent Workflows</span>
+                        </div>
+                        <div class="toolkit-cards-grid" id="roleToolkitGrid">
+                            <!-- Populated dynamically by script.js -->
+                        </div>
+                    </div>
                 </div>
-            </section>
+            </div>
         </main>
     </div>
 
+    <!-- Core Application Logic -->
     <script src="script.js" defer></script>
 </body>
 </html>

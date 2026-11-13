@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Generative Clash</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="brand-wrapper">
+                    <div class="brand-icon">GC</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Generative Clash</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-role-indicator" id="sidebarRoleIndicator" style="display: none;">
+                <span class="role-badge-pill" id="sidebarRoleText">Writers</span>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="agents.html">
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
+                </a>
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item" href="efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item" href="failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                    <span class="nav-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">0 Halts</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item" href="help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item active" href="settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="settings.html" class="profile-card">
+                    <div class="user-avatar" id="sidebarAvatar">A</div>
+                    <div class="user-details">
+                        <span class="user-name" id="topName">Alex</span>
+                        <span class="user-role-label">Creative Director</span>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <header class="topbar">
+                <div class="topbar-breadcrumb">
+                    <a href="../index.html" class="breadcrumb-root">Generative Clash</a>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Settings</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span>PROFILE CONFIGURATION</span>
+                    </div>
+                    <a href="../index.html" id="topbarRoleBtn" class="topbar-role-btn" style="display: none;">
+                        <span>✦</span>
+                        <span id="topbarRoleName">Role</span>
+                    </a>
+                </div>
+            </header>
+
+            <div class="content-container">
+                <div class="page-header-box">
+                    <h1 class="page-title">Creator Profile & Settings</h1>
+                    <p class="page-desc">Manage your workspace identity, default creative discipline, and live backend connection diagnostics.</p>
+                </div>
+
+                <div class="settings-panel">
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsUsername">Creator Display Name</label>
+                        <div class="settings-hint">Used for personalized greetings and agent reports.</div>
+                        <input type="text" id="settingsUsername" class="settings-input" placeholder="e.g. Alex">
+                    </div>
+
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsRoleSelect">Primary Creative Profession</label>
+                        <div class="settings-hint">Sets the default agent orchestration harness on launch.</div>
+                        <select id="settingsRoleSelect" class="settings-select">
+                            <option value="writers">Writers & Storytellers</option>
+                            <option value="musicians">Musicians & Singers</option>
+                            <option value="creators">Content Creators</option>
+                            <option value="designers">Visual Artists & Designers</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-btn-row">
+                        <button class="primary-btn" onclick="saveSettings()">Save Preferences</button>
+                        <button class="clear-btn" onclick="resetRoleChoice()">Reset Category Selection</button>
+                    </div>
+                    <div class="feedback-msg" id="saveFeedback">✓ Settings saved successfully.</div>
+
+                    <hr style="border: none; border-top: 1px solid var(--border); margin: 32px 0 24px;">
+
+                    <div class="settings-field">
+                        <label class="settings-label">Live Backend Health Test</label>
+                        <div class="settings-hint">Executes an API ping to verify FastAPI and Gemini model connectivity.</div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
+                            <button class="clear-btn" id="testPingBtn" onclick="testBackendPing()">Run Diagnostics Ping</button>
+                            <span id="pingResult" style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">Idle</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/common.js" defer></script>
+    <script src="js/settings.js" defer></script>
+</body>
+</html>
