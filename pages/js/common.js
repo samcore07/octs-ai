@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Common Sub-Page Utilities
+ * Octs AI - Common Sub-Page Utilities
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -8,8 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initCommonState() {
-  const username = localStorage.getItem("generative_clash_username") || "Alex";
-  const roleKey = localStorage.getItem("generative_clash_role") || null;
+  const username = localStorage.getItem("octs_ai_username") || localStorage.getItem("generative_clash_username") || "Alex";
+  const roleKey = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role") || null;
 
   const roleTitles = {
     writers: "Writers & Storytellers",

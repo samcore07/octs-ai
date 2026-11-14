@@ -1,6 +1,11 @@
-fastapi
-uvicorn[standard]
-python-dotenv
-langchain
-langchain-google-genai
-pydantic
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-dotenv>=1.0.0
+pydantic>=2.9.0
+pydantic-settings>=2.5.0
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-google-genai>=2.0.0
+langgraph>=0.2.20
+langsmith>=0.1.100
+pytest>=8.0.0

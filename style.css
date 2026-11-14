@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Generative Clash - AI Creative Harness
+   Octs AI - AI Creative Harness
    Design System: Swiss Tech + Industrial Lab
    ========================================================================== */
 
@@ -149,9 +149,9 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-weight: 700;
-  font-size: 15px;
-  letter-spacing: -0.5px;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.2px;
 }
 
 .brand-text {

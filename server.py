@@ -1,65 +1,133 @@
+"""
+Octs AI - Application Entrypoint & Gateway Server
+Modularized FastAPI implementation with LangSmith tracing and configurable CORS.
+"""
+
 import logging
-import os
-from dotenv import load_dotenv
+import time
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from langchain.chat_models import init_chat_model
-from pydantic import BaseModel
 
+from backend.config import get_settings
+from backend.schemas import HealthResponse, PromptRequest, PromptResponse
+from backend.tracing import setup_tracing
+
+# Configure application logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("octs.server")
 logging.getLogger("google_genai").setLevel(logging.ERROR)
-load_dotenv()
 
-if not os.environ.get("GEMINI_API_KEY"):
-  raise RuntimeError("GEMINI_API_KEY not found in .env file!")
+# Load validated configuration
+settings = get_settings()
 
-app = FastAPI()
+# Initialize optional LangSmith observability (fails gracefully if unconfigured)
+setup_tracing(settings)
 
+# Ensure Gemini API key is configured before booting model
+if not settings.gemini_api_key:
+    logger.error("GEMINI_API_KEY not found in environment configuration!")
+    raise RuntimeError("GEMINI_API_KEY not found in .env file or environment!")
+
+# Export for underlying google genai SDK
+import os
+os.environ["GEMINI_API_KEY"] = settings.gemini_api_key
+os.environ["GOOGLE_API_KEY"] = settings.gemini_api_key
+
+# Initialize FastAPI Gateway
+app = FastAPI(
+    title="Octs AI - Creative Harness Gateway",
+    version="0.2.0",
+    description="Enterprise multi-agent creative execution harness.",
+)
+
+# Configure CORS with strict, configurable origins (replacing wildcard)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
+# Initialize Primary LLM
 model = init_chat_model(
-    "gemini-3.5-flash-lite",
-    model_provider="google_genai",
-    temperature=0,
+    settings.model_name,
+    model_provider=settings.model_provider,
+    temperature=settings.model_temperature,
+    api_key=settings.gemini_api_key,
 )
 
 
-class PromptRequest(BaseModel):
-  prompt: str
+# 1. Health & Diagnostics Endpoint
+@app.get("/api/health", response_model=HealthResponse)
+def health_check():
+    """System health inspection endpoint."""
+    return HealthResponse(
+        status="ok",
+        version="0.2.0",
+        model_provider=settings.model_provider,
+        model_name=settings.model_name,
+        langsmith_tracing=settings.is_langsmith_active(),
+    )
 
 
-# 1. Serve index.html when visiting http://127.0.0.1:8000
+# 2. Serve index.html when visiting root
 @app.get("/")
 def serve_home():
-  return FileResponse("index.html")
+    """Serves root Dashboard application."""
+    return FileResponse("index.html")
 
 
-# 2. Handle the chat POST request
-@app.post("/ask")
+# 3. Handle prompt execution via POST /ask (Exact Backward-Compatible Interface)
+@app.post("/ask", response_model=PromptResponse)
 def ask_gemini(request: PromptRequest):
-  print("Received prompt:", request.prompt)
-  try:
-    response = model.invoke(request.prompt)
-    reply_text = (
-        response.content
-        if isinstance(response.content, str)
-        else "".join(
-            block.get("text", "")
-            for block in response.content
-            if isinstance(block, dict)
+    """
+    Primary execution endpoint.
+    Maintains exact backward compatibility with frontend: returns {'reply': ...}
+    """
+    logger.info(f"Received prompt: {request.prompt[:80]}... (length={len(request.prompt)})")
+    start_time = performance_time = time.perf_counter()
+
+    try:
+        response = model.invoke(request.prompt)
+        reply_text = (
+            response.content
+            if isinstance(response.content, str)
+            else "".join(
+                block.get("text", "")
+                for block in response.content
+                if isinstance(block, dict)
+            )
         )
-    )
-    return {"reply": reply_text}
-  except Exception as e:
-    print("ERROR IN /ask:", repr(e))
-    raise HTTPException(status_code=500, detail=str(e))
+        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+
+        return PromptResponse(
+            reply=reply_text,
+            role=request.role,
+            latency_ms=elapsed_ms,
+            model_used=settings.model_name,
+        )
+
+    except Exception as e:
+        logger.error(f"ERROR IN /ask: {repr(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
-# 3. Serve style.css and script.js from the same folder
+# 4. Safe fallback for accidental GET /ask requests to avoid confusing 405s
+@app.get("/ask")
+def ask_gemini_get_fallback():
+    """Friendly guard against GET requests to the prompt execution endpoint."""
+    return {
+        "status": "error",
+        "message": "The /ask endpoint requires an HTTP POST request with a JSON payload: {'prompt': '...'}",
+    }
+
+
+# 5. Serve static files (HTML, CSS, JS, pages/)
 app.mount("/", StaticFiles(directory="."), name="static")

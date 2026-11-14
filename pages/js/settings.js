@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Settings Controller
+ * Octs AI - Settings Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -10,8 +10,8 @@ function loadCurrentSettings() {
   const usernameInput = document.getElementById("settingsUsername");
   const roleSelect = document.getElementById("settingsRoleSelect");
 
-  const currentUsername = localStorage.getItem("generative_clash_username") || "Alex";
-  const currentRole = localStorage.getItem("generative_clash_role") || "writers";
+  const currentUsername = localStorage.getItem("octs_ai_username") || localStorage.getItem("generative_clash_username") || "Alex";
+  const currentRole = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role") || "writers";
 
   if (usernameInput) usernameInput.value = currentUsername;
   if (roleSelect && currentRole) roleSelect.value = currentRole;
@@ -23,10 +23,13 @@ function saveSettings() {
   const feedback = document.getElementById("saveFeedback");
 
   if (usernameInput && usernameInput.value.trim()) {
-    localStorage.setItem("generative_clash_username", usernameInput.value.trim());
+    const val = usernameInput.value.trim();
+    localStorage.setItem("octs_ai_username", val);
+    localStorage.setItem("generative_clash_username", val);
   }
 
   if (roleSelect && roleSelect.value) {
+    localStorage.setItem("octs_ai_role", roleSelect.value);
     localStorage.setItem("generative_clash_role", roleSelect.value);
   }
 
@@ -38,6 +41,10 @@ function saveSettings() {
   }
 
   // Refresh common header state
+  if (window.initCommonState) {
+    window.initCommonState();
+  }
+}
   if (window.initCommonState) {
     window.initCommonState();
   }
@@ -79,6 +86,7 @@ async function testBackendPing() {
 }
 
 function resetRoleChoice() {
+  localStorage.removeItem("octs_ai_role");
   localStorage.removeItem("generative_clash_role");
   window.location.href = "../index.html";
 }

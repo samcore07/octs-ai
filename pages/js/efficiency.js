@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Efficiency Telemetry Controller
+ * Octs AI - Efficiency Telemetry Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {

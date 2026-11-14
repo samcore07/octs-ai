@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Failures & Recovery Controller
+ * Octs AI - Failures & Recovery Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {

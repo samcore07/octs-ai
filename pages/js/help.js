@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Help Controller
+ * Octs AI - Help Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {

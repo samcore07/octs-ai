@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Workflows Controller
+ * Octs AI - Workflows Controller
  */
 
 function runWorkflow(workflowName, initialPrompt) {

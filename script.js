@@ -1,5 +1,5 @@
 /**
- * Generative Clash - AI Creative Harness
+ * Octs AI - AI Creative Harness
  * Frontend Controller & API Integration
  */
 
@@ -152,9 +152,9 @@ const ROLES_DATA = {
 };
 
 // Global App State
-let currentRole = localStorage.getItem("generative_clash_role") || null;
+let currentRole = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role") || null;
 let currentTab = "dashboard";
-let currentUsername = localStorage.getItem("generative_clash_username") || "Alex";
+let currentUsername = localStorage.getItem("octs_ai_username") || localStorage.getItem("generative_clash_username") || "Alex";
 
 // DOM Initializer
 document.addEventListener("DOMContentLoaded", () => {
@@ -198,6 +198,7 @@ function initUsername() {
 function updateUsername(newName) {
   if (!newName || !newName.trim()) return;
   currentUsername = newName.trim();
+  localStorage.setItem("octs_ai_username", currentUsername);
   localStorage.setItem("generative_clash_username", currentUsername);
   initUsername();
 }
@@ -279,12 +280,14 @@ function initRoleSelection() {
 function selectRole(roleKey) {
   if (!ROLES_DATA[roleKey]) return;
   currentRole = roleKey;
+  localStorage.setItem("octs_ai_role", roleKey);
   localStorage.setItem("generative_clash_role", roleKey);
   renderRoleWorkspace(roleKey);
 }
 
 function switchRole() {
   currentRole = null;
+  localStorage.removeItem("octs_ai_role");
   localStorage.removeItem("generative_clash_role");
   showRolePicker();
 }

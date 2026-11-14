@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Success Rate Controller
+ * Octs AI - Success Rate Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {

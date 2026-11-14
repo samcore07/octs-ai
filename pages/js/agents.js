@@ -1,5 +1,5 @@
 /**
- * Generative Clash - Agents Controller
+ * Octs AI - Agents Controller
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -31,7 +31,7 @@ function initFilterPills() {
 }
 
 function highlightCurrentRoleAgents() {
-  const savedRole = localStorage.getItem("generative_clash_role");
+  const savedRole = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role");
   if (!savedRole) return;
 
   const matchingPill = document.querySelector(`.filter-pill[data-category="${savedRole}"]`);
