@@ -97,7 +97,7 @@ def test_ask_endpoint_handles_model_failure(client):
     mock_model.invoke.side_effect = RuntimeError("Google GenAI API Quota Exceeded")
 
     with patch.object(server, "model", mock_model):
-        payload = {"prompt": "Trigger simulated failure"}
+        payload = {"prompt": "Write a story to trigger simulated failure", "role": "writers"}
         response = client.post("/ask", json=payload)
 
         assert response.status_code == 500

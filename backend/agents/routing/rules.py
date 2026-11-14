@@ -207,3 +207,36 @@ def score_prompt_for_discipline(prompt: str, discipline_id: str) -> List[Tuple[s
 
     sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
     return sorted_scores
+
+
+def detect_best_discipline(prompt: str) -> Tuple[Optional[str], Optional[str], float, Dict[str, float]]:
+    """
+    Evaluates a prompt across all 4 disciplines to detect the most relevant discipline.
+    Returns (best_discipline_id, best_persona_id, best_score, discipline_max_scores).
+    If no discipline has positive matches, best_discipline_id will be None.
+    """
+    disc_scores: Dict[str, float] = {}
+    best_personas: Dict[str, str] = {}
+
+    for disc in ["writers", "musicians", "creators", "designers"]:
+        scores = score_prompt_for_discipline(prompt, disc)
+        if scores and scores[0][1] > 0.0:
+            disc_scores[disc] = scores[0][1]
+            best_personas[disc] = scores[0][0]
+        else:
+            disc_scores[disc] = 0.0
+            best_personas[disc] = DEFAULT_PERSONAS[disc]
+
+    sorted_disc = sorted(disc_scores.items(), key=lambda item: item[1], reverse=True)
+    top_disc, top_score = sorted_disc[0]
+
+    if top_score == 0.0:
+        return (None, None, 0.0, disc_scores)
+
+    # If top score is tied between multiple disciplines, check for ambiguity
+    second_score = sorted_disc[1][1] if len(sorted_disc) > 1 else 0.0
+    if top_score == second_score and top_score > 0.0:
+        # Tie between two disciplines without explicit user preference
+        return (None, None, top_score, disc_scores)
+
+    return (top_disc, best_personas.get(top_disc), top_score, disc_scores)

@@ -162,6 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSidebarNavigation();
   initRoleSelection();
   initChatExecution();
+  initThemeToggle();
   
   // If user previously selected a role, render that workspace immediately
   if (currentRole && ROLES_DATA[currentRole]) {
@@ -179,6 +180,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 300);
   }
 });
+
+// Theme Management (Light / Dark)
+function initThemeToggle() {
+  const toggleBtn = document.getElementById("themeToggleBtn");
+  const currentTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  updateThemeButton(currentTheme);
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", () => {
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      const nextTheme = isDark ? "light" : "dark";
+      applyTheme(nextTheme);
+    });
+  }
+
+  // Cross-tab theme synchronization
+  window.addEventListener("storage", (e) => {
+    if (e.key === "octs_ai_theme") {
+      const newTheme = e.newValue || "light";
+      applyTheme(newTheme, false);
+    }
+  });
+}
+
+function applyTheme(theme, save = true) {
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+  if (save) {
+    localStorage.setItem("octs_ai_theme", theme);
+  }
+  updateThemeButton(theme);
+}
+
+function updateThemeButton(theme) {
+  const toggleBtn = document.getElementById("themeToggleBtn");
+  if (!toggleBtn) return;
+  toggleBtn.setAttribute("title", theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode");
+  toggleBtn.setAttribute("aria-label", theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode");
+}
 
 // 1. User Profile Management
 function initUsername() {
@@ -218,8 +261,28 @@ function initSidebarNavigation() {
   const sidebar = document.querySelector(".sidebar");
   if (sidebarToggle && sidebar) {
     sidebarToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("collapsed");
+      if (window.innerWidth <= 768) {
+        sidebar.classList.toggle("mobile-open");
+      } else {
+        sidebar.classList.toggle("collapsed");
+      }
     });
+
+    // Close mobile sidebar on Escape or outside click
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && sidebar.classList.contains("mobile-open")) {
+        sidebar.classList.remove("mobile-open");
+      }
+    });
+
+    const main = document.querySelector(".main-viewport");
+    if (main) {
+      main.addEventListener("click", () => {
+        if (sidebar.classList.contains("mobile-open")) {
+          sidebar.classList.remove("mobile-open");
+        }
+      });
+    }
   }
 }
 
@@ -430,12 +493,62 @@ function initChatExecution() {
   }
 }
 
+function formatAgentDisplayName(personaId) {
+  if (!personaId) return "Auto-Routed Lead";
+  const nameMap = {
+    narrative_architect: "Narrative Architect",
+    lore_continuity_keeper: "Lore & Continuity Keeper",
+    prose_stylist: "Prose Stylist",
+    research_scout: "Research Scout",
+    lyricist_meter_engine: "Lyricist & Meter Engine",
+    harmonic_arranger: "Harmonic Arranger",
+    track_structure_architect: "Track Structure Architect",
+    sonic_palette_curator: "Sonic Palette Curator",
+    hook_retention_architect: "Hook & Retention Architect",
+    multi_platform_transmuter: "Multi-Platform Transmuter",
+    editorial_cadence_planner: "Editorial Cadence Planner",
+    audience_friction_auditor: "Audience Friction Auditor",
+    concept_ideation_engine: "Concept Ideation Engine",
+    visual_system_auditor: "Visual System Auditor",
+    art_direction_critic: "Art Direction Critic",
+    design_token_palette_architect: "Design Token Architect"
+  };
+  return nameMap[personaId] || personaId.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function renderMarkdown(text) {
+  if (!text) return "";
+  let safe = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  safe = safe.replace(/^### (.*$)/gim, '<h4 class="md-h4">$1</h4>');
+  safe = safe.replace(/^## (.*$)/gim, '<h3 class="md-h3">$1</h3>');
+  safe = safe.replace(/^# (.*$)/gim, '<h2 class="md-h2">$1</h2>');
+
+  safe = safe.replace(/\*\*\*(.*?)\*\*\*/gim, '<strong><em>$1</em></strong>');
+  safe = safe.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+  safe = safe.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+
+  safe = safe.replace(/`([^`]+)`/gim, '<code class="md-code">$1</code>');
+  safe = safe.replace(/^---$/gim, '<hr class="md-hr">');
+  safe = safe.replace(/^\> (.*$)/gim, '<blockquote class="md-quote">$1</blockquote>');
+  safe = safe.replace(/^[\*\-] (.*$)/gim, '<li class="md-li">$1</li>');
+  safe = safe.replace(/\n/gim, '<br>');
+
+  return safe;
+}
+
 async function submitTask() {
   const chatInput = document.getElementById("chatInput") || document.getElementById("promptInput");
   const outputDiv = document.getElementById("output");
   const sendBtn = document.getElementById("sendBtn");
   const consoleStatus = document.getElementById("consoleStatusPill");
   const latencyBadge = document.getElementById("latencyBadge");
+  const agentBadge = document.getElementById("agentBadge");
+  const engineBadge = document.getElementById("engineBadge");
+  const statusBadge = document.getElementById("statusBadge");
   const pipelineIndicator = document.getElementById("pipelineIndicator");
 
   const userInput = chatInput ? chatInput.value.trim() : "";
@@ -464,24 +577,21 @@ async function submitTask() {
 
   const startTime = performance.now();
 
-  // Enhance prompt with creative role context for world-class domain assistance
-  let finalPrompt = userInput;
-  if (currentRole && ROLES_DATA[currentRole]) {
-    const roleInfo = ROLES_DATA[currentRole];
-    finalPrompt = `[Creative Harness Profession: ${roleInfo.title}]\n\nUser Creative Task:\n${userInput}\n\n[Harness Instructions: Act as a master engineering & creative harness for a ${roleInfo.title}. Address any writer's/creator's block, provide concrete, high-craft ideas, structured suggestions, and breakdown step-by-step guidance.]`;
-  }
-
   try {
+    const payload = {
+      prompt: userInput,
+      role: currentRole || null
+    };
+
     const response = await fetch("/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ prompt: finalPrompt })
+      body: JSON.stringify(payload)
     });
 
     const elapsedMs = Math.round(performance.now() - startTime);
-    if (latencyBadge) latencyBadge.textContent = `${elapsedMs}ms`;
 
     if (!response.ok) {
       throw new Error(`Server returned status ${response.status}`);
@@ -491,23 +601,57 @@ async function submitTask() {
     const replyText = data.reply || "No response received from creative harness.";
 
     if (outputDiv) {
-      outputDiv.textContent = replyText;
+      outputDiv.innerHTML = renderMarkdown(replyText);
     }
 
-    if (consoleStatus) {
-      consoleStatus.textContent = "● VERIFIED OUTPUT";
-      consoleStatus.style.color = "#34D399";
-      consoleStatus.style.background = "rgba(16, 185, 129, 0.15)";
-      consoleStatus.style.borderColor = "rgba(16, 185, 129, 0.3)";
+    if (latencyBadge) {
+      latencyBadge.textContent = `${data.latency_ms || elapsedMs}ms`;
     }
 
-    if (pipelineIndicator) {
-      pipelineIndicator.innerHTML = `
-        <span class="pipeline-step">Input</span> → 
-        <span class="pipeline-step">Intent</span> → 
-        <span class="pipeline-step">Coordinated</span> → 
-        <span class="pipeline-step active">Output Verified ✓</span>
-      `;
+    if (engineBadge && data.model_used) {
+      engineBadge.textContent = data.model_used;
+    }
+
+    if (agentBadge) {
+      agentBadge.textContent = formatAgentDisplayName(data.agent_used);
+    }
+
+    if (data.needs_clarification) {
+      if (consoleStatus) {
+        consoleStatus.textContent = "● CLARIFICATION NEEDED";
+        consoleStatus.style.color = "#F59E0B";
+        consoleStatus.style.background = "rgba(245, 158, 11, 0.15)";
+        consoleStatus.style.borderColor = "rgba(245, 158, 11, 0.3)";
+      }
+      if (statusBadge) {
+        statusBadge.textContent = "Clarification Needed";
+        statusBadge.style.color = "#F59E0B";
+      }
+      if (pipelineIndicator) {
+        pipelineIndicator.innerHTML = `
+          <span class="pipeline-step">Input</span> → 
+          <span class="pipeline-step active">Clarification Requested</span>
+        `;
+      }
+    } else {
+      if (consoleStatus) {
+        consoleStatus.textContent = "● VERIFIED OUTPUT";
+        consoleStatus.style.color = "#34D399";
+        consoleStatus.style.background = "rgba(16, 185, 129, 0.15)";
+        consoleStatus.style.borderColor = "rgba(16, 185, 129, 0.3)";
+      }
+      if (statusBadge) {
+        statusBadge.textContent = "Active / Verified";
+        statusBadge.style.color = "#34D399";
+      }
+      if (pipelineIndicator) {
+        pipelineIndicator.innerHTML = `
+          <span class="pipeline-step">Input</span> → 
+          <span class="pipeline-step">Intent</span> → 
+          <span class="pipeline-step">Coordinated</span> → 
+          <span class="pipeline-step active">Output Verified ✓</span>
+        `;
+      }
     }
 
   } catch (error) {
@@ -561,3 +705,4 @@ window.insertPrompt = insertPrompt;
 window.insertAndExecute = insertAndExecute;
 window.clearPromptInput = clearPromptInput;
 window.updateUsername = updateUsername;
+window.applyTheme = applyTheme;

@@ -27,6 +27,10 @@ class PromptRequest(BaseModel):
         default=None,
         description="Optional thread or session identifier for conversational continuity.",
     )
+    task_type: Optional[str] = Field(
+        default=None,
+        description="Optional explicit task category override.",
+    )
 
     @field_validator("prompt")
     @classmethod
@@ -63,6 +67,10 @@ class PromptResponse(BaseModel):
     latency_ms: Optional[int] = Field(default=None, description="Server-measured execution latency in milliseconds.")
     recovery_triggered: bool = Field(default=False, description="Whether autonomous recovery loops were triggered.")
     model_used: Optional[str] = Field(default=None, description="The model name that produced the final output.")
+    needs_clarification: bool = Field(default=False, description="Whether the request requires user clarification before execution.")
+    clarification_question: Optional[str] = Field(default=None, description="Clarification question when discipline is ambiguous.")
+    routing_confidence: Optional[float] = Field(default=None, description="Confidence score of the routing decision.")
+    execution_status: Optional[str] = Field(default=None, description="Status code of the orchestration execution.")
 
 
 class HealthResponse(BaseModel):

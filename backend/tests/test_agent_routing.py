@@ -66,15 +66,16 @@ def test_explicit_task_type_routing(router):
 
 
 def test_invalid_discipline_handling(router):
-    """Verify unknown discipline safely falls back to default without throwing exceptions."""
+    """Verify unknown discipline safely requests clarification without throwing exceptions."""
     result = router.route(
         prompt="Tell me about quantum gravity",
         discipline_id="astrophysics",
     )
-    assert result.discipline_id == "writers"
-    assert result.persona_id == "narrative_architect"
-    assert result.routing_method == "discipline_default_fallback"
-    assert "unrecognized" in result.rationale
+    assert result.needs_clarification is True
+    assert result.discipline_id is None
+    assert result.persona_id is None
+    assert result.routing_method == "clarification_required"
+    assert result.clarification_question is not None
 
 
 def test_ambiguous_prompt_fallback_routing(router):

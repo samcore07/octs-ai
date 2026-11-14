@@ -12,15 +12,15 @@
   --border-subtle: #EEF0F4;
   --border-hover: #CBD2DE;
   
-  --text: #20242B;
-  --text-secondary: #737B87;
-  --text-muted: #9EA7B4;
+  --text: #1E242B;
+  --text-secondary: #647082;
+  --text-muted: #94A0B2;
   --text-inverse: #FFFFFF;
   
-  --accent: #5368D5;
-  --accent-hover: #4355B8;
-  --accent-subtle: #EEF1FB;
-  --accent-border: #D1D8F5;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-subtle: #EEF4FF;
+  --accent-border: #C7D9FE;
   
   --success: #10B981;
   --success-subtle: #ECFDF5;
@@ -32,12 +32,14 @@
   
   --danger: #EF4444;
   --danger-subtle: #FEF2F2;
+  --danger-border: #FECACA;
   
   --console-bg: #171B24;
   --console-header: #12151D;
   --console-border: #262B36;
   --console-text: #E2E8F0;
   --console-muted: #8F9BA8;
+  --console-code-bg: #0D1016;
   
   --sidebar-width: 252px;
   --sidebar-collapsed-width: 72px;
@@ -53,8 +55,58 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
   --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 10px 24px -3px rgba(0, 0, 0, 0.04);
-  --transition-fast: 0.15s ease;
-  --transition: 0.2s ease;
+  --shadow-console: 0 8px 24px rgba(0, 0, 0, 0.2);
+  
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   Dark Theme (Elevated Deep Charcoal System)
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --bg: #0F1117;
+  --surface: #161922;
+  --surface-alt: #1C202B;
+  --surface-hover: #222735;
+  --border: #262B37;
+  --border-subtle: #1C202B;
+  --border-hover: #394254;
+  
+  --text: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverse: #0F1117;
+  
+  --accent: #3B82F6;
+  --accent-hover: #60A5FA;
+  --accent-subtle: rgba(59, 130, 246, 0.12);
+  --accent-border: rgba(59, 130, 246, 0.28);
+  
+  --success: #10B981;
+  --success-subtle: rgba(16, 185, 129, 0.12);
+  --success-border: rgba(16, 185, 129, 0.28);
+  
+  --warning: #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.28);
+  
+  --danger: #EF4444;
+  --danger-subtle: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.28);
+  
+  --console-bg: #0C0E14;
+  --console-header: #08090E;
+  --console-border: #1D222E;
+  --console-text: #F1F5F9;
+  --console-muted: #8291A4;
+  --console-code-bg: #06070B;
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 10px 24px -3px rgba(0, 0, 0, 0.3);
+  --shadow-console: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -445,6 +497,43 @@ body {
   border-color: var(--border-hover);
 }
 
+.theme-toggle-btn {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.theme-toggle-btn .sun-icon {
+  display: none;
+}
+
+.theme-toggle-btn .moon-icon {
+  display: block;
+}
+
+[data-theme="dark"] .theme-toggle-btn .sun-icon {
+  display: block;
+}
+
+[data-theme="dark"] .theme-toggle-btn .moon-icon {
+  display: none;
+}
+
 .content-container {
   padding: 32px 36px 64px;
   max-width: 1200px;
@@ -536,11 +625,28 @@ body {
   }
   .sidebar.mobile-open {
     left: 0;
+    box-shadow: 0 0 0 100vw rgba(0, 0, 0, 0.5);
   }
   .content-container {
     padding: 20px 16px 40px;
   }
   .topbar {
     padding: 0 16px;
+  }
+}
+
+/* Global Theme Transitions & Reduced Motion Support */
+body, .sidebar, .topbar, .role-card, .workspace-header-card,
+.harness-interaction-panel, .metric-card, .chart-card, .agent-roster-card,
+.workflow-card, .help-card, .settings-panel, .dark-console-box, .theme-toggle-btn {
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

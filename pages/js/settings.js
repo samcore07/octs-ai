@@ -9,17 +9,21 @@ document.addEventListener("DOMContentLoaded", () => {
 function loadCurrentSettings() {
   const usernameInput = document.getElementById("settingsUsername");
   const roleSelect = document.getElementById("settingsRoleSelect");
+  const themeSelect = document.getElementById("settingsThemeSelect");
 
   const currentUsername = localStorage.getItem("octs_ai_username") || localStorage.getItem("generative_clash_username") || "Alex";
   const currentRole = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role") || "writers";
+  const currentTheme = localStorage.getItem("octs_ai_theme") || "light";
 
   if (usernameInput) usernameInput.value = currentUsername;
   if (roleSelect && currentRole) roleSelect.value = currentRole;
+  if (themeSelect) themeSelect.value = currentTheme;
 }
 
 function saveSettings() {
   const usernameInput = document.getElementById("settingsUsername");
   const roleSelect = document.getElementById("settingsRoleSelect");
+  const themeSelect = document.getElementById("settingsThemeSelect");
   const feedback = document.getElementById("saveFeedback");
 
   if (usernameInput && usernameInput.value.trim()) {
@@ -33,6 +37,19 @@ function saveSettings() {
     localStorage.setItem("generative_clash_role", roleSelect.value);
   }
 
+  if (themeSelect && themeSelect.value) {
+    if (window.applyTheme) {
+      window.applyTheme(themeSelect.value);
+    } else {
+      localStorage.setItem("octs_ai_theme", themeSelect.value);
+      if (themeSelect.value === "dark") {
+        document.documentElement.setAttribute("data-theme", "dark");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+    }
+  }
+
   if (feedback) {
     feedback.style.display = "block";
     setTimeout(() => {
@@ -41,10 +58,6 @@ function saveSettings() {
   }
 
   // Refresh common header state
-  if (window.initCommonState) {
-    window.initCommonState();
-  }
-}
   if (window.initCommonState) {
     window.initCommonState();
   }

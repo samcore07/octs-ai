@@ -170,15 +170,29 @@ class RoutingResult(BaseModel):
     """Result of agent task routing."""
     model_config = ConfigDict(extra="ignore")
 
-    discipline_id: str = Field(..., description="Resolved discipline ID.")
-    persona_id: str = Field(..., description="Target specialist persona ID.")
+    discipline_id: Optional[str] = Field(
+        default=None,
+        description="Resolved discipline ID, or None if clarification is required."
+    )
+    persona_id: Optional[str] = Field(
+        default=None,
+        description="Target specialist persona ID, or None if clarification is required."
+    )
     confidence: float = Field(..., ge=0.0, le=1.0, description="Routing certainty score between 0.0 and 1.0.")
-    rationale: str = Field(..., description="User-safe explanation of why this specialist was assigned.")
+    rationale: str = Field(..., description="User-safe explanation of why this specialist or clarification was selected.")
     alternative_persona_id: Optional[str] = Field(
         default=None,
         description="Secondary recommendation if the user's task spans multiple specialties."
     )
     routing_method: str = Field(
         default="deterministic_rule",
-        description="Mechanism used: 'deterministic_rule', 'model_classification', or 'discipline_default_fallback'."
+        description="Mechanism used: 'deterministic_rule', 'model_classification', 'discipline_default_fallback', or 'clarification_required'."
+    )
+    needs_clarification: bool = Field(
+        default=False,
+        description="Whether ambiguous discipline or intent requires user clarification."
+    )
+    clarification_question: Optional[str] = Field(
+        default=None,
+        description="Concise clarification question presented to the user when discipline is ambiguous."
     )

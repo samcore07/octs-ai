@@ -4,7 +4,7 @@
    ========================================================================== */
 
 :root {
-  /* Color Palette - Swiss Tech */
+  /* Color Palette - Swiss Tech (Light Theme Default) */
   --bg: #F7F8FA;
   --surface: #FFFFFF;
   --surface-alt: #F1F3F7;
@@ -13,15 +13,15 @@
   --border-subtle: #EEF0F4;
   --border-hover: #CBD2DE;
   
-  --text: #20242B;
-  --text-secondary: #737B87;
-  --text-muted: #9EA7B4;
+  --text: #1E242B;
+  --text-secondary: #647082;
+  --text-muted: #94A0B2;
   --text-inverse: #FFFFFF;
   
-  --accent: #5368D5;
-  --accent-hover: #4355B8;
-  --accent-subtle: #EEF1FB;
-  --accent-border: #D1D8F5;
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-subtle: #EEF4FF;
+  --accent-border: #C7D9FE;
   
   --success: #10B981;
   --success-subtle: #ECFDF5;
@@ -63,8 +63,56 @@
   --shadow-console: 0 8px 24px rgba(0, 0, 0, 0.2);
   
   /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition: 0.2s ease;
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================================================
+   Dark Theme (Elevated Deep Charcoal System)
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --bg: #0F1117;
+  --surface: #161922;
+  --surface-alt: #1C202B;
+  --surface-hover: #222735;
+  --border: #262B37;
+  --border-subtle: #1C202B;
+  --border-hover: #394254;
+  
+  --text: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverse: #0F1117;
+  
+  --accent: #3B82F6;
+  --accent-hover: #60A5FA;
+  --accent-subtle: rgba(59, 130, 246, 0.12);
+  --accent-border: rgba(59, 130, 246, 0.28);
+  
+  --success: #10B981;
+  --success-subtle: rgba(16, 185, 129, 0.12);
+  --success-border: rgba(16, 185, 129, 0.28);
+  
+  --warning: #F59E0B;
+  --warning-subtle: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.28);
+  
+  --danger: #EF4444;
+  --danger-subtle: rgba(239, 68, 68, 0.12);
+  --danger-border: rgba(239, 68, 68, 0.28);
+  
+  --console-bg: #0C0E14;
+  --console-header: #08090E;
+  --console-border: #1D222E;
+  --console-text: #F1F5F9;
+  --console-muted: #8291A4;
+  --console-code-bg: #06070B;
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 10px 24px -3px rgba(0, 0, 0, 0.3);
+  --shadow-console: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 /* ==========================================================================
@@ -468,6 +516,43 @@ body {
   border-color: var(--border-hover);
 }
 
+.theme-toggle-btn {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  padding: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.theme-toggle-btn .sun-icon {
+  display: none;
+}
+
+.theme-toggle-btn .moon-icon {
+  display: block;
+}
+
+[data-theme="dark"] .theme-toggle-btn .sun-icon {
+  display: block;
+}
+
+[data-theme="dark"] .theme-toggle-btn .moon-icon {
+  display: none;
+}
+
 /* ==========================================================================
    Content Sections
    ========================================================================== */
@@ -643,11 +728,19 @@ body {
 
 .challenge-tag {
   font-size: 11px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   padding: 3px 8px;
   border-radius: var(--radius-sm);
   background-color: var(--surface-alt);
   color: var(--text-secondary);
+  border: 1px solid var(--border);
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.role-card:hover .challenge-tag {
+  border-color: var(--border-hover);
+  color: var(--text);
 }
 
 .role-select-action {
@@ -659,6 +752,15 @@ body {
   font-size: 13px;
   font-weight: 600;
   color: var(--accent);
+}
+
+.role-select-action span:last-child {
+  display: inline-block;
+  transition: transform var(--transition-fast);
+}
+
+.role-card:hover .role-select-action span:last-child {
+  transform: translateX(3px);
 }
 
 /* ==========================================================================
@@ -1129,6 +1231,58 @@ body {
   align-items: center;
   justify-content: center;
   height: 140px;
+}
+
+.console-content .md-h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 16px 0 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 4px;
+}
+
+.console-content .md-h3 {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #93C5FD;
+  margin: 14px 0 6px;
+}
+
+.console-content .md-h4 {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #E2E8F0;
+  margin: 10px 0 4px;
+}
+
+.console-content .md-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background-color: var(--console-code-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #FBBF24;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.console-content .md-hr {
+  border: none;
+  border-top: 1px solid var(--console-border);
+  margin: 14px 0;
+}
+
+.console-content .md-quote {
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+  margin: 8px 0;
+  color: #CBD5E1;
+  font-style: italic;
+}
+
+.console-content .md-li {
+  margin-left: 18px;
+  list-style-type: disc;
 }
 
 .console-footer-info {
@@ -1629,6 +1783,7 @@ body {
   
   .sidebar.mobile-open {
     left: 0;
+    box-shadow: 0 0 0 100vw rgba(0, 0, 0, 0.5);
   }
   
   .content-container {
@@ -1646,5 +1801,24 @@ body {
   
   .topbar {
     padding: 0 16px;
+  }
+}
+
+/* ==========================================================================
+   Global Theme Transitions & Reduced Motion Support
+   ========================================================================== */
+
+body, .sidebar, .topbar, .role-card, .workspace-header-card,
+.harness-interaction-panel, .metric-card, .chart-card, .agent-roster-card,
+.workflow-card, .help-card, .settings-panel, .dark-console-box, .theme-toggle-btn {
+  transition: background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

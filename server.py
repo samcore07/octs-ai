@@ -15,6 +15,7 @@ from backend.config import get_settings
 from backend.schemas import HealthResponse, PromptRequest, PromptResponse
 from backend.tracing import setup_tracing
 from backend.agents.routing import AgentRouter
+from backend.orchestration import OrchestrationExecutor
 
 # Configure application logging
 logging.basicConfig(
@@ -64,8 +65,9 @@ model = init_chat_model(
     api_key=settings.gemini_api_key,
 )
 
-# Initialize Agent Persona Router
+# Initialize Agent Persona Router & Orchestration Executor with Injected Dependencies
 router = AgentRouter()
+executor = OrchestrationExecutor(model=model, router=router)
 
 
 # 1. Health & Diagnostics Endpoint
@@ -99,34 +101,16 @@ def ask_gemini(request: PromptRequest):
     start_time = performance_time = time.perf_counter()
 
     try:
-        # Route task to appropriate specialist persona
-        target_discipline = request.role if request.role in settings.allowed_disciplines else "writers"
-        routing = router.route(prompt=request.prompt, discipline_id=target_discipline)
-        logger.info(
-            f"Routed prompt to '{routing.persona_id}' ({routing.discipline_id}) "
-            f"with confidence {routing.confidence:.2f} via {routing.routing_method}."
-        )
+        active_executor = executor
+        if active_executor.model is not model:
+            active_executor = OrchestrationExecutor(model=model, router=router)
 
-        response = model.invoke(request.prompt)
-        reply_text = (
-            response.content
-            if isinstance(response.content, str)
-            else "".join(
-                block.get("text", "")
-                for block in response.content
-                if isinstance(block, dict)
-            )
-        )
-        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
-
-        return PromptResponse(
-            reply=reply_text,
+        response = active_executor.execute_prompt(
+            prompt=request.prompt,
             role=request.role,
-            agent_used=routing.persona_id,
-            latency_ms=elapsed_ms,
-            model_used=settings.model_name,
+            session_id=request.session_id,
         )
-
+        return response
     except Exception as e:
         logger.error(f"ERROR IN /ask: {repr(e)}")
         raise HTTPException(status_code=500, detail=str(e))

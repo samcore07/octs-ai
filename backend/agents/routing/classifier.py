@@ -1,7 +1,11 @@
 """
-OCTS AI - Agent Router & Classifier
-Determines the optimal specialist persona for a given user prompt and creative discipline.
-Combines explicit task mapping, deterministic heuristic pattern scoring, and safe model classification with deterministic fallback.
+OCTS AI - Agent Router & Classifier (Refined Phase 3)
+Determines the optimal specialist persona or triggers clarification when discipline is ambiguous.
+Differentiates between:
+  Case A: Clear discipline and specialist
+  Case B: Known discipline, uncertain specialist (safe specialist fallback)
+  Case C: Ambiguous discipline (structured needs_clarification result)
+  Case D: Routing failure / invalid persona protection
 """
 
 from typing import Any, Dict, Optional
@@ -10,12 +14,13 @@ from backend.agents.registry import get_registry
 from backend.agents.routing.rules import (
     DEFAULT_PERSONAS,
     TASK_TYPE_MAPPING,
+    detect_best_discipline,
     score_prompt_for_discipline,
 )
 
 
 class AgentRouter:
-    """Routes creative tasks to specialist personas within a specified discipline."""
+    """Routes creative tasks to specialist personas with intelligent clarification for ambiguous queries."""
 
     def __init__(self, registry=None):
         self.registry = registry or get_registry()
@@ -23,120 +28,147 @@ class AgentRouter:
     def route(
         self,
         prompt: str,
-        discipline_id: str,
+        discipline_id: Optional[str] = None,
         task_type: Optional[str] = None,
         session_context: Optional[Dict[str, Any]] = None,
         model: Optional[Any] = None,
     ) -> RoutingResult:
         """
-        Routes the user's prompt to the most qualified specialist persona.
+        Routes the user's prompt to the most qualified specialist persona or requests clarification.
 
         Args:
             prompt: User creative inquiry or request text.
-            discipline_id: Target discipline identifier ('writers', 'musicians', 'creators', 'designers').
+            discipline_id: Optional target discipline ('writers', 'musicians', 'creators', 'designers').
             task_type: Optional explicit task category.
             session_context: Optional session context dictionary.
-            model: Optional LangChain model for assisted classification on ambiguous tasks.
+            model: Optional LangChain model for assisted classification.
 
         Returns:
-            RoutingResult containing resolved discipline, persona, confidence, rationale, and alternatives.
+            RoutingResult with persona, confidence, rationale, and needs_clarification flag.
         """
-        # Validate discipline
-        clean_discipline = (discipline_id or "").lower().strip()
-        discipline_config = self.registry.get_discipline(clean_discipline)
+        prompt_text = (prompt or "").strip()
 
-        if not discipline_config:
-            # Fallback to writers if an unknown discipline is passed, or reject safely
-            clean_discipline = "writers"
-            discipline_config = self.registry.get_discipline("writers")
-            default_persona_id = DEFAULT_PERSONAS["writers"]
-            persona = self.registry.get_persona(default_persona_id)
-
-            return RoutingResult(
-                discipline_id=clean_discipline,
-                persona_id=default_persona_id,
-                confidence=0.30,
-                rationale=(
-                    f"Discipline '{discipline_id}' is unrecognized. Defaulted to "
-                    f"Writers & Storytellers with {persona.display_name}."
-                ),
-                routing_method="discipline_default_fallback",
-            )
-
-        # 1. Check explicit task_type mapping if provided
+        # 1. Explicit task_type mapping
         if task_type:
             normalized_task = task_type.lower().strip()
             if normalized_task in TASK_TYPE_MAPPING:
                 mapped_persona_id = TASK_TYPE_MAPPING[normalized_task]
                 persona = self.registry.get_persona(mapped_persona_id)
-                # Verify that the mapped persona belongs to the selected discipline
-                if persona and persona.discipline_id == clean_discipline:
-                    return RoutingResult(
-                        discipline_id=clean_discipline,
-                        persona_id=mapped_persona_id,
-                        confidence=0.95,
-                        rationale=f"Selected {persona.display_name} based on explicit task categorization '{task_type}'.",
-                        routing_method="deterministic_rule",
-                    )
+                if persona:
+                    # If discipline was specified, verify match; otherwise adopt persona's discipline
+                    clean_discipline = (discipline_id or "").lower().strip()
+                    if not clean_discipline or clean_discipline == persona.discipline_id:
+                        return RoutingResult(
+                            discipline_id=persona.discipline_id,
+                            persona_id=mapped_persona_id,
+                            confidence=0.95,
+                            rationale=f"Selected {persona.display_name} based on explicit task categorization '{task_type}'.",
+                            routing_method="deterministic_rule",
+                            needs_clarification=False,
+                        )
 
-        # 2. Deterministic heuristic pattern scoring
-        scores = score_prompt_for_discipline(prompt, clean_discipline)
-        if scores and scores[0][1] > 0.0:
-            top_persona_id, top_score = scores[0]
-            persona = self.registry.get_persona(top_persona_id)
+        # 2. Check if an explicit discipline was provided and is valid
+        clean_discipline = (discipline_id or "").lower().strip() if discipline_id else None
+        valid_discipline = self.registry.get_discipline(clean_discipline) if clean_discipline else None
 
-            alt_persona_id = None
-            if len(scores) > 1 and scores[1][1] > 0.0:
-                alt_persona_id = scores[1][0]
+        # -------------------------------------------------------------------
+        # SCENARIO 1: Discipline is KNOWN (Explicitly selected by user)
+        # -------------------------------------------------------------------
+        if valid_discipline:
+            disc_id = valid_discipline.id
+            scores = score_prompt_for_discipline(prompt_text, disc_id)
 
-            # Confidence scaled by match intensity and separation margin
-            margin = top_score - (scores[1][1] if len(scores) > 1 else 0.0)
-            confidence = min(0.92, 0.65 + (top_score * 0.05) + (margin * 0.05))
+            # Case A: Specialist is clear from craft patterns within known discipline
+            if scores and scores[0][1] > 0.0:
+                top_persona_id, top_score = scores[0]
+                persona = self.registry.get_persona(top_persona_id)
+
+                alt_persona_id = None
+                if len(scores) > 1 and scores[1][1] > 0.0:
+                    alt_persona_id = scores[1][0]
+
+                margin = top_score - (scores[1][1] if len(scores) > 1 else 0.0)
+                confidence = min(0.92, 0.65 + (top_score * 0.05) + (margin * 0.05))
+
+                return RoutingResult(
+                    discipline_id=disc_id,
+                    persona_id=top_persona_id,
+                    confidence=round(confidence, 2),
+                    rationale=f"Selected {persona.display_name} based on domain craft keywords and task pattern matching.",
+                    alternative_persona_id=alt_persona_id,
+                    routing_method="deterministic_rule",
+                    needs_clarification=False,
+                )
+
+            # Optional model-assisted classification within the known discipline
+            if model is not None:
+                model_result = self._classify_with_model(prompt_text, disc_id, model)
+                if model_result:
+                    return model_result
+
+            # Case B: Discipline is known, but specialist is uncertain -> safe discipline lead fallback
+            default_persona_id = DEFAULT_PERSONAS.get(disc_id, valid_discipline.specialist_persona_ids[0])
+            persona = self.registry.get_persona(default_persona_id)
 
             return RoutingResult(
-                discipline_id=clean_discipline,
-                persona_id=top_persona_id,
-                confidence=round(confidence, 2),
+                discipline_id=disc_id,
+                persona_id=default_persona_id,
+                confidence=0.50,
                 rationale=(
-                    f"Selected {persona.display_name} based on domain craft keywords and "
-                    f"task pattern matching."
+                    f"Discipline is confirmed as {valid_discipline.display_name}, but specific craft task was general. "
+                    f"Assigned primary lead specialist ({persona.display_name}) for guidance."
                 ),
-                alternative_persona_id=alt_persona_id,
-                routing_method="deterministic_rule",
+                alternative_persona_id=(
+                    valid_discipline.specialist_persona_ids[1]
+                    if len(valid_discipline.specialist_persona_ids) > 1
+                    else None
+                ),
+                routing_method="discipline_default_fallback",
+                needs_clarification=False,
             )
 
-        # 3. Model-assisted classification for ambiguous prompts (if model provided)
-        if model is not None:
-            model_result = self._classify_with_model(prompt, clean_discipline, model)
-            if model_result:
-                return model_result
+        # -------------------------------------------------------------------
+        # SCENARIO 2: Discipline is NOT SPECIFIED or UNRECOGNIZED
+        # -------------------------------------------------------------------
+        # Try to infer discipline from prompt keywords across all 4 disciplines
+        best_disc, best_persona, top_score, _ = detect_best_discipline(prompt_text)
 
-        # 4. Fallback to discipline default persona
-        default_persona_id = DEFAULT_PERSONAS.get(clean_discipline, discipline_config.specialist_persona_ids[0])
-        persona = self.registry.get_persona(default_persona_id)
+        if best_disc and best_persona and top_score > 0.0:
+            # Case A/B inferred from clear domain craft keywords
+            persona = self.registry.get_persona(best_persona)
+            disc_config = self.registry.get_discipline(best_disc)
+            confidence = min(0.90, 0.65 + (top_score * 0.05))
 
+            return RoutingResult(
+                discipline_id=best_disc,
+                persona_id=best_persona,
+                confidence=round(confidence, 2),
+                rationale=f"Detected {disc_config.display_name} discipline based on craft keywords and assigned {persona.display_name}.",
+                routing_method="deterministic_rule",
+                needs_clarification=False,
+            )
+
+        # Case C: Discipline itself is ambiguous (e.g., "I want to create something interesting")
+        # Do NOT guess or default arbitrarily to writers. Return structured clarification result.
         return RoutingResult(
-            discipline_id=clean_discipline,
-            persona_id=default_persona_id,
-            confidence=0.50,
-            rationale=(
-                f"Assigned primary discipline specialist ({persona.display_name}) "
-                f"for general creative guidance."
+            discipline_id=None,
+            persona_id=None,
+            confidence=0.0,
+            rationale="The creative discipline could not be determined from your request.",
+            routing_method="clarification_required",
+            needs_clarification=True,
+            clarification_question=(
+                "Which creative discipline are you working in? "
+                "(Writers & Storytellers, Musicians & Singers, Content Creators, or Visual Artists & Designers)"
             ),
-            alternative_persona_id=(
-                discipline_config.specialist_persona_ids[1]
-                if len(discipline_config.specialist_persona_ids) > 1
-                else None
-            ),
-            routing_method="discipline_default_fallback",
         )
 
     def _classify_with_model(
         self, prompt: str, discipline_id: str, model: Any
     ) -> Optional[RoutingResult]:
         """
-        Executes safe model-assisted classification with structured output and error trapping.
-        Never throws exceptions and never returns unvetted persona IDs.
+        Executes model-assisted classification with strict validation against registered personas.
+        Never allows unvetted or hallucinated persona IDs.
         """
         discipline = self.registry.get_discipline(discipline_id)
         if not discipline:
@@ -160,7 +192,6 @@ class AgentRouter:
             response = model.invoke(classification_prompt)
             raw_content = getattr(response, "content", str(response)).strip().lower()
 
-            # Find matching persona ID from valid options
             for p in personas:
                 if p.id in raw_content:
                     return RoutingResult(
@@ -169,9 +200,9 @@ class AgentRouter:
                         confidence=0.85,
                         rationale=f"Selected {p.display_name} via context-aware task classification.",
                         routing_method="model_classification",
+                        needs_clarification=False,
                     )
         except Exception:
-            # Model failure or timeout: silently fail over to deterministic rules
             pass
 
         return None
