@@ -14,6 +14,7 @@ from langchain.chat_models import init_chat_model
 from backend.config import get_settings
 from backend.schemas import HealthResponse, PromptRequest, PromptResponse
 from backend.tracing import setup_tracing
+from backend.agents.routing import AgentRouter
 
 # Configure application logging
 logging.basicConfig(
@@ -63,6 +64,9 @@ model = init_chat_model(
     api_key=settings.gemini_api_key,
 )
 
+# Initialize Agent Persona Router
+router = AgentRouter()
+
 
 # 1. Health & Diagnostics Endpoint
 @app.get("/api/health", response_model=HealthResponse)
@@ -95,6 +99,14 @@ def ask_gemini(request: PromptRequest):
     start_time = performance_time = time.perf_counter()
 
     try:
+        # Route task to appropriate specialist persona
+        target_discipline = request.role if request.role in settings.allowed_disciplines else "writers"
+        routing = router.route(prompt=request.prompt, discipline_id=target_discipline)
+        logger.info(
+            f"Routed prompt to '{routing.persona_id}' ({routing.discipline_id}) "
+            f"with confidence {routing.confidence:.2f} via {routing.routing_method}."
+        )
+
         response = model.invoke(request.prompt)
         reply_text = (
             response.content
@@ -110,6 +122,7 @@ def ask_gemini(request: PromptRequest):
         return PromptResponse(
             reply=reply_text,
             role=request.role,
+            agent_used=routing.persona_id,
             latency_ms=elapsed_ms,
             model_used=settings.model_name,
         )
