@@ -48,6 +48,15 @@ class Settings(BaseSettings):
     max_recovery_attempts: int = 2
     max_prompt_length: int = 50000
 
+    # Phase 4: Evaluation Engine Settings
+    evaluation_enabled: bool = True
+    evaluation_mode: str = "deterministic"  # "deterministic" | "llm_judge" | "hybrid"
+    evaluation_quality_weight: float = 0.70
+    evaluation_reliability_weight: float = 0.30
+    evaluation_judge_enabled: bool = False
+    evaluation_timeout: float = 10.0
+    evaluation_max_retries: int = 1
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

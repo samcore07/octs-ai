@@ -1,6 +1,7 @@
 """
-OCTS AI - LangGraph StateGraph Definition & Compilation (Refined Phase 3)
-Constructs and compiles the single shared orchestration graph with explicit dependency injection.
+OCTS AI - LangGraph StateGraph Definition & Compilation (Refined Phase 4)
+Constructs and compiles the single shared orchestration graph with explicit dependency injection
+for Model, Router, Registry, and EvaluationEngine.
 """
 
 from typing import Any, Optional
@@ -13,6 +14,7 @@ from backend.orchestration.edges import (
     route_after_task_routing,
 )
 from backend.orchestration.nodes import (
+    evaluate_execution_node,
     execute_model_node,
     finalize_execution_node,
     handle_routing_fallback_node,
@@ -28,8 +30,10 @@ def build_orchestration_graph(
     model: Optional[Any] = None,
     router: Optional[Any] = None,
     registry: Optional[Any] = None,
+    evaluator_engine: Optional[Any] = None,
     model_override: Optional[Any] = None,
     router_override: Optional[Any] = None,
+    evaluator_engine_override: Optional[Any] = None,
 ) -> StateGraph:
     """
     Constructs the uncompiled StateGraph for creative task orchestration.
@@ -38,6 +42,7 @@ def build_orchestration_graph(
     workflow = StateGraph(OrchestrationState)
     active_model = model if model is not None else model_override
     active_router = router if router is not None else router_override
+    active_engine = evaluator_engine if evaluator_engine is not None else evaluator_engine_override
 
     def _route_node(state: OrchestrationState):
         return route_request_node(state, router=active_router, registry=registry)
@@ -51,6 +56,9 @@ def build_orchestration_graph(
     def _model_node(state: OrchestrationState):
         return execute_model_node(state, model=active_model)
 
+    def _eval_node(state: OrchestrationState):
+        return evaluate_execution_node(state, engine=active_engine)
+
     # Register workflow nodes
     workflow.add_node("validate_input", validate_input_node)
     workflow.add_node("route_request", _route_node)
@@ -58,6 +66,7 @@ def build_orchestration_graph(
     workflow.add_node("prepare_persona", _prep_node)
     workflow.add_node("execute_model", _model_node)
     workflow.add_node("validate_output", validate_output_node)
+    workflow.add_node("evaluate_execution", _eval_node)
     workflow.add_node("finalize_execution", finalize_execution_node)
 
     # 1. Entry point into validation
@@ -97,20 +106,23 @@ def build_orchestration_graph(
         },
     )
 
-    # 6. Model execution conditional branch
+    # 6. Model execution conditional branch (provider failure proceeds to evaluation for reliability tracking)
     workflow.add_conditional_edges(
         "execute_model",
         route_after_model_execution,
         {
             "validate_output": "validate_output",
-            "finalize_execution": "finalize_execution",
+            "evaluate_execution": "evaluate_execution",
         },
     )
 
-    # 7. Output validation leads to finalization
-    workflow.add_edge("validate_output", "finalize_execution")
+    # 7. Output validation transitions into Evaluation Engine
+    workflow.add_edge("validate_output", "evaluate_execution")
 
-    # 8. Finalization terminates graph execution
+    # 8. Evaluation Engine transitions into Finalization
+    workflow.add_edge("evaluate_execution", "finalize_execution")
+
+    # 9. Finalization terminates graph execution
     workflow.add_edge("finalize_execution", END)
 
     return workflow
@@ -123,8 +135,10 @@ def get_orchestration_graph(
     model: Optional[Any] = None,
     router: Optional[Any] = None,
     registry: Optional[Any] = None,
+    evaluator_engine: Optional[Any] = None,
     model_override: Optional[Any] = None,
     router_override: Optional[Any] = None,
+    evaluator_engine_override: Optional[Any] = None,
 ):
     """
     Returns a compiled LangGraph executable for production or test environments.
@@ -133,12 +147,19 @@ def get_orchestration_graph(
     global _COMPILED_GRAPH
     active_model = model if model is not None else model_override
     active_router = router if router is not None else router_override
+    active_engine = evaluator_engine if evaluator_engine is not None else evaluator_engine_override
 
-    if active_model is not None or active_router is not None or registry is not None:
+    if (
+        active_model is not None
+        or active_router is not None
+        or registry is not None
+        or active_engine is not None
+    ):
         graph = build_orchestration_graph(
             model=active_model,
             router=active_router,
             registry=registry,
+            evaluator_engine=active_engine,
         )
         return graph.compile()
 

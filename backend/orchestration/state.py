@@ -45,3 +45,10 @@ class OrchestrationState(TypedDict, total=False):
 
     # Additional execution metadata
     metadata: Optional[Dict[str, Any]]
+
+    # Phase 4: Evaluation Engine & TrustScore
+    evaluation_result: Optional[Dict[str, Any]]
+    quality_score: Optional[float]
+    reliability_score: Optional[float]
+    trust_score: Optional[float]
+    trust_breakdown: Optional[Dict[str, Any]]

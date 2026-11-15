@@ -1,6 +1,6 @@
 """
-OCTS AI - Orchestration Graph Conditional Edges (Refined Phase 3)
-Defines edge routing predicates for the LangGraph state graph.
+OCTS AI - Orchestration Graph Conditional Edges (Refined Phase 4)
+Defines edge routing predicates for the LangGraph state graph including Evaluation Engine routing.
 """
 
 from backend.orchestration.state import OrchestrationState
@@ -18,7 +18,7 @@ def route_after_input_validation(state: OrchestrationState) -> str:
 def route_after_task_routing(state: OrchestrationState) -> str:
     """
     Decides routing branch:
-      - If discipline is ambiguous (Case C) -> short-circuit to finalization (bypasses LLM!).
+      - If discipline is ambiguous (Case C) -> short-circuit to finalization (bypasses LLM & evaluation).
       - If discipline is known but specialist uncertain (Case B) -> safe specialist fallback.
       - If specialist is verified (Case A) -> prepare persona.
     """
@@ -41,8 +41,16 @@ def route_after_persona_preparation(state: OrchestrationState) -> str:
 
 def route_after_model_execution(state: OrchestrationState) -> str:
     """
-    Decides whether to validate model output or terminate on provider execution failure.
+    Decides whether to validate model output or proceed to evaluation on provider execution failure.
+    Provider failure proceeds to evaluation so deterministic reliability checks record the failure.
     """
     if state.get("execution_status") == "execution_failed":
-        return "finalize_execution"
+        return "evaluate_execution"
     return "validate_output"
+
+
+def route_after_output_validation(state: OrchestrationState) -> str:
+    """
+    Routes output to evaluation engine so that reliability and quality checks assess the result.
+    """
+    return "evaluate_execution"

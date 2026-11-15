@@ -30,9 +30,11 @@ class OrchestrationExecutor:
         model: Optional[Any] = None,
         router: Optional[AgentRouter] = None,
         registry: Optional[AgentRegistry] = None,
+        evaluation_engine: Optional[Any] = None,
         settings: Optional[Settings] = None,
         model_override: Optional[Any] = None,
         router_override: Optional[Any] = None,
+        evaluation_engine_override: Optional[Any] = None,
         graph=None,
     ):
         self.settings = settings or get_settings()
@@ -40,10 +42,22 @@ class OrchestrationExecutor:
         self.registry = registry or get_registry()
         active_router = router if router is not None else router_override
         self.router = active_router or AgentRouter(registry=self.registry)
+
+        active_engine = evaluation_engine if evaluation_engine is not None else evaluation_engine_override
+        if active_engine is None:
+            from backend.evaluation.engine import EvaluationEngine
+            self.evaluation_engine = EvaluationEngine(
+                model=self.model,
+                settings=self.settings,
+            )
+        else:
+            self.evaluation_engine = active_engine
+
         self.graph = graph or get_orchestration_graph(
             model=self.model,
             router=self.router,
             registry=self.registry,
+            evaluator_engine=self.evaluation_engine,
         )
 
     def run(
@@ -137,8 +151,9 @@ class OrchestrationExecutor:
             reply=reply,
             role=final_state.get("discipline_id"),
             agent_used=final_state.get("selected_persona_id"),
-            trust_score=None,
-            trust_breakdown=None,
+            trust_score=final_state.get("trust_score"),
+            trust_breakdown=final_state.get("trust_breakdown"),
+            evaluation=final_state.get("evaluation_result"),
             latency_ms=final_state.get("latency_ms"),
             recovery_triggered=False,
             model_used=final_state.get("model_name", self.settings.model_name),

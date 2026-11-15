@@ -278,6 +278,49 @@ def validate_output_node(state: OrchestrationState) -> Dict[str, Any]:
     }
 
 
+def evaluate_execution_node(
+    state: OrchestrationState,
+    engine: Optional[Any] = None,
+    engine_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Node G: Evaluation Engine & Scoring Calculator
+    Assesses creative output quality and execution reliability as independent dimensions.
+    Calculates composite TrustScore. Defensive against evaluation exceptions so creative output
+    is never destroyed if evaluation fails.
+    """
+    from backend.evaluation.engine import EvaluationEngine
+
+    active_engine = engine if engine is not None else engine_override
+    if active_engine is None:
+        active_engine = EvaluationEngine()
+
+    try:
+        eval_result = active_engine.evaluate_execution(dict(state))
+        dumped = eval_result.model_dump()
+        return {
+            "evaluation_result": dumped,
+            "quality_score": eval_result.quality_score,
+            "reliability_score": eval_result.reliability_score,
+            "trust_score": eval_result.trust_score,
+            "trust_breakdown": eval_result.trust_breakdown.model_dump() if eval_result.trust_breakdown else None,
+            "execution_status": "evaluated" if not state.get("execution_error") else state.get("execution_status", "failed"),
+        }
+    except Exception as e:
+        logger.error(f"Error executing evaluation node: {e}", exc_info=True)
+        return {
+            "evaluation_result": {
+                "evaluation_status": "unavailable",
+                "evaluation_summary": f"Evaluation unavailable: {str(e)}",
+            },
+            "quality_score": None,
+            "reliability_score": None,
+            "trust_score": None,
+            "trust_breakdown": None,
+            "execution_status": "evaluated" if not state.get("execution_error") else state.get("execution_status", "failed"),
+        }
+
+
 def finalize_execution_node(state: OrchestrationState) -> Dict[str, Any]:
     """
     Node F: Finalization
@@ -289,10 +332,11 @@ def finalize_execution_node(state: OrchestrationState) -> Dict[str, Any]:
     elapsed_ms = int((now_perf - started_at) * 1000) if started_at else 0
 
     current_status = state.get("execution_status", "unknown")
+    has_error = bool(state.get("execution_error"))
 
     if current_status == "needs_clarification":
         final_status = "completed_clarification_required"
-    elif current_status == "output_validated":
+    elif (current_status in ("output_validated", "evaluated", "completed")) and not has_error:
         final_status = "completed"
     else:
         final_status = "failed"
