@@ -12,6 +12,9 @@ from backend.config import get_settings
 from backend.agents.registry import get_registry
 from backend.agents.routing.classifier import AgentRouter
 from backend.orchestration.state import OrchestrationState
+from backend.observability.collector import get_collector
+from backend.observability.events import ExecutionEventType
+from backend.observability.metrics import extract_model_usage
 
 logger = logging.getLogger("octs.orchestration.nodes")
 
@@ -91,6 +94,12 @@ def route_request_node(
     # Case C: Ambiguous discipline -> requires user clarification
     if getattr(routing_result, "needs_clarification", False) is True:
         logger.info("Routing determined prompt is ambiguous across disciplines. Triggering clarification.")
+        get_collector().emit_event(
+            event_name=ExecutionEventType.REQUEST_CLARIFICATION_REQUIRED,
+            component="route_request_node",
+            request_id=state.get("request_id"),
+            metadata={"question": getattr(routing_result, "clarification_question", None)},
+        )
         return {
             "discipline_id": None,
             "selected_persona_id": None,
@@ -106,6 +115,13 @@ def route_request_node(
     persona = active_registry.get_persona(routing_result.persona_id)
     if not persona:
         logger.warning(f"Router returned unregistered persona '{routing_result.persona_id}'. Requiring safe fallback.")
+        get_collector().emit_event(
+            event_name=ExecutionEventType.ROUTING_FALLBACK,
+            component="route_request_node",
+            request_id=state.get("request_id"),
+            discipline=routing_result.discipline_id,
+            metadata={"reason": "unregistered_persona", "persona_attempted": routing_result.persona_id},
+        )
         return {
             "execution_status": "routing_fallback",
             "selected_persona_id": None,
@@ -116,6 +132,14 @@ def route_request_node(
 
     # Case B: Discipline is known, but specialist is uncertain
     if routing_result.routing_method == "discipline_default_fallback" or routing_result.confidence < 0.40:
+        get_collector().emit_event(
+            event_name=ExecutionEventType.ROUTING_FALLBACK,
+            component="route_request_node",
+            request_id=state.get("request_id"),
+            discipline=routing_result.discipline_id,
+            persona=routing_result.persona_id,
+            metadata={"confidence": routing_result.confidence, "method": routing_result.routing_method},
+        )
         return {
             "discipline_id": routing_result.discipline_id,
             "selected_persona_id": routing_result.persona_id,
@@ -127,6 +151,14 @@ def route_request_node(
         }
 
     # Case A: Both discipline and specialist are clear
+    get_collector().emit_event(
+        event_name=ExecutionEventType.ROUTING_COMPLETED,
+        component="route_request_node",
+        request_id=state.get("request_id"),
+        discipline=routing_result.discipline_id,
+        persona=routing_result.persona_id,
+        metadata={"confidence": routing_result.confidence, "method": routing_result.routing_method},
+    )
     return {
         "discipline_id": routing_result.discipline_id,
         "selected_persona_id": routing_result.persona_id,
@@ -247,15 +279,43 @@ def execute_model_node(
         else:
             reply_text = str(raw_content)
 
+        p_tokens, c_tokens, t_tokens = extract_model_usage(response)
+
+        get_collector().emit_event(
+            event_name=ExecutionEventType.MODEL_EXECUTION_COMPLETED,
+            component="execute_model_node",
+            request_id=state.get("request_id"),
+            duration_ms=duration_ms,
+            discipline=state.get("discipline_id"),
+            persona=state.get("selected_persona_id"),
+            metadata={
+                "model": settings.model_name,
+                "prompt_tokens": p_tokens,
+                "completion_tokens": c_tokens,
+                "total_tokens": t_tokens,
+            },
+        )
+
         return {
             "generated_output": reply_text,
             "model_name": settings.model_name,
             "execution_status": "executed",
             "initial_generation_latency_ms": duration_ms,
             "model_call_count": 1,
+            "prompt_tokens": p_tokens,
+            "completion_tokens": c_tokens,
+            "total_tokens": t_tokens,
         }
     except Exception as e:
         logger.error(f"LLM execution error during node invocation: {e}")
+        get_collector().emit_event(
+            event_name=ExecutionEventType.MODEL_EXECUTION_FAILED,
+            component="execute_model_node",
+            request_id=state.get("request_id"),
+            discipline=state.get("discipline_id"),
+            persona=state.get("selected_persona_id"),
+            metadata={"error": str(e)},
+        )
         return {
             "execution_status": "execution_failed",
             "execution_error": f"Model execution error: {str(e)}",
@@ -285,6 +345,15 @@ def validate_output_node(state: OrchestrationState) -> Dict[str, Any]:
             "generated_output": "Output Validation Error: The model returned an empty response.",
         }
 
+    get_collector().emit_event(
+        event_name=ExecutionEventType.OUTPUT_VALIDATION_COMPLETED,
+        component="validate_output_node",
+        request_id=state.get("request_id"),
+        discipline=state.get("discipline_id"),
+        persona=state.get("selected_persona_id"),
+        metadata={"output_length": len(output)},
+    )
+
     return {
         "execution_status": "output_validated",
     }
@@ -310,6 +379,18 @@ def evaluate_execution_node(
     try:
         eval_result = active_engine.evaluate_execution(dict(state))
         dumped = eval_result.model_dump()
+        get_collector().emit_event(
+            event_name=ExecutionEventType.EVALUATION_COMPLETED,
+            component="evaluate_execution_node",
+            request_id=state.get("request_id"),
+            discipline=state.get("discipline_id"),
+            persona=state.get("selected_persona_id"),
+            metadata={
+                "quality_score": eval_result.quality_score,
+                "reliability_score": eval_result.reliability_score,
+                "trust_score": eval_result.trust_score,
+            },
+        )
         return {
             "evaluation_result": dumped,
             "quality_score": eval_result.quality_score,
@@ -320,6 +401,14 @@ def evaluate_execution_node(
         }
     except Exception as e:
         logger.error(f"Error executing evaluation node: {e}", exc_info=True)
+        get_collector().emit_event(
+            event_name=ExecutionEventType.EVALUATION_FAILED,
+            component="evaluate_execution_node",
+            request_id=state.get("request_id"),
+            discipline=state.get("discipline_id"),
+            persona=state.get("selected_persona_id"),
+            metadata={"error": str(e)},
+        )
         return {
             "evaluation_result": {
                 "evaluation_status": "unavailable",
@@ -542,6 +631,15 @@ def peer_review_node(
     if not peer_reviewer_id:
         return {"peer_review_result": None}
 
+    get_collector().emit_event(
+        event_name=ExecutionEventType.PEER_REVIEW_STARTED,
+        component="peer_review_node",
+        request_id=state.get("request_id"),
+        discipline=state.get("discipline_id"),
+        persona=peer_reviewer_id,
+        metadata={"author_persona": state.get("selected_persona_id")},
+    )
+
     try:
         t0 = time.perf_counter()
         review_result = active_engine.conduct_peer_review(
@@ -552,6 +650,28 @@ def peer_review_node(
         )
         duration_ms = int((time.perf_counter() - t0) * 1000)
         call_inc = 1 if getattr(review_result, "review_method", "llm") == "llm" else 0
+
+        if getattr(review_result, "fallback_triggered", False):
+            get_collector().emit_event(
+                event_name=ExecutionEventType.PEER_REVIEW_FALLBACK,
+                component="peer_review_node",
+                request_id=state.get("request_id"),
+                duration_ms=duration_ms,
+                discipline=state.get("discipline_id"),
+                persona=peer_reviewer_id,
+                metadata={"reason": getattr(review_result, "fallback_reason", "unknown")},
+            )
+        else:
+            get_collector().emit_event(
+                event_name=ExecutionEventType.PEER_REVIEW_COMPLETED,
+                component="peer_review_node",
+                request_id=state.get("request_id"),
+                duration_ms=duration_ms,
+                discipline=state.get("discipline_id"),
+                persona=peer_reviewer_id,
+                metadata={"review_method": getattr(review_result, "review_method", "llm")},
+            )
+
         return {
             "peer_review_result": review_result.model_dump(),
             "peer_review_latency_ms": (state.get("peer_review_latency_ms") or 0) + duration_ms,
@@ -560,6 +680,14 @@ def peer_review_node(
         }
     except Exception as e:
         logger.warning(f"Error executing peer review node: {e}")
+        get_collector().emit_event(
+            event_name=ExecutionEventType.PEER_REVIEW_FALLBACK,
+            component="peer_review_node",
+            request_id=state.get("request_id"),
+            discipline=state.get("discipline_id"),
+            persona=peer_reviewer_id,
+            metadata={"reason": "exception", "error": str(e)},
+        )
         return {
             "peer_review_result": {
                 "reviewer_persona_id": peer_reviewer_id,
@@ -632,6 +760,15 @@ def synthesize_feedback_node(
         SystemMessage(content=system_prompt),
         HumanMessage(content=refinement_prompt),
     ]
+
+    get_collector().emit_event(
+        event_name=ExecutionEventType.REFINEMENT_STARTED,
+        component="synthesize_feedback_node",
+        request_id=state.get("request_id"),
+        discipline=state.get("discipline_id"),
+        persona=state.get("selected_persona_id"),
+        metadata={"attempt_number": state.get("recovery_attempts", 1)},
+    )
 
     return {
         "refinement_feedback": synthesized_text,
@@ -767,6 +904,14 @@ def improvement_analyzer_node(
     # If candidate failed execution or evaluation, reject and revert
     if not cand_output or not cand_eval:
         fail_reason = "Candidate refinement failed generation or evaluation. Reverting to previous best output."
+        get_collector().emit_event(
+            event_name=ExecutionEventType.REFINEMENT_REVERTED,
+            component="improvement_analyzer_node",
+            request_id=state.get("request_id"),
+            discipline=state.get("discipline_id"),
+            persona=state.get("selected_persona_id"),
+            metadata={"reason": fail_reason, "attempt": attempt_num},
+        )
         imp_record = ImprovementRecord(
             attempt_number=attempt_num,
             selection_reason=fail_reason,
@@ -805,6 +950,29 @@ def improvement_analyzer_node(
     history = list(state.get("improvement_history") or [])
     history.append(imp_record.model_dump())
 
+    event_type = (
+        ExecutionEventType.REFINEMENT_COMPLETED
+        if imp_record.candidate_accepted
+        else (
+            ExecutionEventType.REFINEMENT_REVERTED
+            if "revert" in str(ref_st).lower()
+            else ExecutionEventType.REFINEMENT_REJECTED
+        )
+    )
+    get_collector().emit_event(
+        event_name=event_type,
+        component="improvement_analyzer_node",
+        request_id=state.get("request_id"),
+        discipline=state.get("discipline_id"),
+        persona=state.get("selected_persona_id"),
+        metadata={
+            "attempt": attempt_num,
+            "accepted": imp_record.candidate_accepted,
+            "is_improvement": imp_record.is_improvement,
+            "refinement_status": str(ref_st),
+        },
+    )
+
     res = {
         "best_output": best_out,
         "best_evaluation": best_ev,
@@ -840,6 +1008,13 @@ def identify_context_node(state: OrchestrationState) -> Dict[str, Any]:
     project_id = state.get("project_id")
     session_id = state.get("session_id")
 
+    get_collector().emit_event(
+        event_name=ExecutionEventType.CONTEXT_IDENTIFIED,
+        component="identify_context_node",
+        request_id=state.get("request_id"),
+        metadata={"owner_id": owner_id, "project_id": project_id, "session_id": session_id},
+    )
+
     return {
         "owner_id": owner_id,
         "project_id": project_id,
@@ -868,12 +1043,31 @@ def retrieve_memory_node(
     project_id = state.get("project_id")
     discipline = state.get("discipline_id")
 
+    get_collector().emit_event(
+        event_name=ExecutionEventType.MEMORY_RETRIEVAL_STARTED,
+        component="retrieve_memory_node",
+        request_id=state.get("request_id"),
+        discipline=discipline,
+        metadata={"owner_id": owner_id, "project_id": project_id},
+    )
+
     try:
+        t0 = time.perf_counter()
         context_str, telemetry_items = active_manager.retrieve_context(
             prompt=prompt,
             owner_id=owner_id,
             project_id=project_id,
             discipline=discipline,
+        )
+        duration_ms = int((time.perf_counter() - t0) * 1000)
+
+        get_collector().emit_event(
+            event_name=ExecutionEventType.MEMORY_RETRIEVAL_COMPLETED,
+            component="retrieve_memory_node",
+            request_id=state.get("request_id"),
+            duration_ms=duration_ms,
+            discipline=discipline,
+            metadata={"items_retrieved": len(telemetry_items)},
         )
 
         return {
@@ -1012,6 +1206,18 @@ def persist_memory_node(
         persistence_status=persistence_status,
         memories_retrieved=retrieved_items,
         project_id=project_id,
+    )
+
+    get_collector().emit_event(
+        event_name=ExecutionEventType.MEMORY_PERSISTENCE_COMPLETED,
+        component="persist_memory_node",
+        request_id=state.get("request_id"),
+        discipline=state.get("discipline_id"),
+        metadata={
+            "persistence_status": persistence_status,
+            "extracted_count": len(extracted_dicts),
+            "retrieved_count": len(retrieved_items),
+        },
     )
 
     return {"memory_metadata": metadata.model_dump()}

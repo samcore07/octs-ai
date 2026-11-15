@@ -4,6 +4,7 @@ High-level execution harness managing invocation of the LangGraph workflow, recu
 Receives explicit model and router dependencies.
 """
 
+from datetime import datetime, timezone
 import logging
 import time
 import uuid
@@ -15,6 +16,11 @@ from backend.agents.registry import AgentRegistry, get_registry
 from backend.agents.routing.classifier import AgentRouter
 from backend.orchestration.graph import get_orchestration_graph
 from backend.orchestration.state import OrchestrationState
+from backend.observability.collector import get_collector
+from backend.observability.context import get_correlation_id, get_request_id, set_request_context
+from backend.observability.error_tracking import classify_exception
+from backend.observability.events import ExecutionEventType
+from backend.observability.schemas import RequestTelemetrySchema
 
 logger = logging.getLogger("octs.orchestration.executor")
 
@@ -91,11 +97,15 @@ class OrchestrationExecutor:
         task_type: Optional[str] = None,
         project_id: Optional[str] = None,
         owner_id: Optional[str] = None,
+        request_id: Optional[str] = None,
+        correlation_id: Optional[str] = None,
     ) -> OrchestrationState:
         """
         Executes a prompt through the LangGraph StateGraph pipeline.
+        Integrates request correlation and lifecycle event tracking.
         """
-        request_id = str(uuid.uuid4())
+        resolved_req_id = request_id or get_request_id() or str(uuid.uuid4())
+        resolved_corr_id = correlation_id or get_correlation_id() or resolved_req_id
         started_at = time.perf_counter()
 
         # Clean discipline input: None if omitted or general
@@ -107,8 +117,17 @@ class OrchestrationExecutor:
 
         resolved_owner = (owner_id or "").strip() or getattr(self.settings, "memory_default_owner_id", "default_user")
 
+        # Set request context variables for tracing and structured logs
+        set_request_context(
+            request_id=resolved_req_id,
+            correlation_id=resolved_corr_id,
+            discipline=clean_role,
+            owner_id=resolved_owner,
+        )
+
         initial_state: OrchestrationState = {
-            "request_id": request_id,
+            "request_id": resolved_req_id,
+            "correlation_id": resolved_corr_id,
             "original_prompt": prompt,
             "discipline_id": clean_role,
             "task_type": task_type,
@@ -120,6 +139,15 @@ class OrchestrationExecutor:
             "needs_clarification": False,
         }
 
+        # Emit request_started lifecycle event
+        get_collector().emit_event(
+            event_name=ExecutionEventType.REQUEST_STARTED,
+            component="orchestration_executor",
+            request_id=resolved_req_id,
+            discipline=clean_role,
+            metadata={"prompt_length": len(prompt) if prompt else 0, "task_type": task_type},
+        )
+
         # Calculate safe dynamic recursion limit from configured refinement attempts
         max_attempts = getattr(self.settings, "refinement_max_attempts", 2)
         safe_recursion_limit = max(self.settings.max_recursion_limit, 15 + 8 * max_attempts)
@@ -128,14 +156,15 @@ class OrchestrationExecutor:
             "recursion_limit": safe_recursion_limit,
             "tags": ["octs-orchestration", clean_role or "unspecified"],
             "metadata": {
-                "request_id": request_id,
+                "request_id": resolved_req_id,
+                "correlation_id": resolved_corr_id,
                 "role": clean_role or "unspecified",
                 "session_id": session_id,
             },
         }
 
         logger.info(
-            f"Invoking LangGraph pipeline [req_id={request_id[:8]}, role={clean_role}, "
+            f"Invoking LangGraph pipeline [req_id={resolved_req_id[:8]}, role={clean_role}, "
             f"prompt_len={len(prompt) if prompt else 0}]"
         )
 
@@ -143,7 +172,7 @@ class OrchestrationExecutor:
             final_state = self.graph.invoke(initial_state, config=config)
             return final_state
         except Exception as e:
-            logger.error(f"Uncaught graph execution error [req_id={request_id}]: {e}")
+            logger.error(f"Uncaught graph execution error [req_id={resolved_req_id}]: {e}")
             elapsed_ms = int((time.perf_counter() - started_at) * 1000)
             return {
                 **initial_state,
@@ -162,10 +191,12 @@ class OrchestrationExecutor:
         task_type: Optional[str] = None,
         project_id: Optional[str] = None,
         owner_id: Optional[str] = None,
+        request_id: Optional[str] = None,
+        correlation_id: Optional[str] = None,
     ) -> PromptResponse:
         """
         Runs the workflow and converts output state into the PromptResponse schema.
-        Handles both normal executions and clarification outcomes.
+        Handles both normal executions and clarification outcomes with operational telemetry recording.
         """
         final_state = self.run(
             prompt=prompt,
@@ -174,7 +205,76 @@ class OrchestrationExecutor:
             task_type=task_type,
             project_id=project_id,
             owner_id=owner_id,
+            request_id=request_id,
+            correlation_id=correlation_id,
         )
+
+        req_id = final_state.get("request_id") or "unknown_req"
+        status = final_state.get("execution_status", "completed")
+        disc = final_state.get("discipline_id")
+        pers = final_state.get("selected_persona_id")
+        latency_ms = final_state.get("latency_ms") or 0
+
+        # Record operational completion events
+        if final_state.get("needs_clarification"):
+            get_collector().emit_event(
+                event_name=ExecutionEventType.REQUEST_CLARIFICATION_REQUIRED,
+                component="orchestration_executor",
+                request_id=req_id,
+                discipline=disc,
+                metadata={"question": final_state.get("clarification_question")},
+            )
+        elif status == "failed":
+            get_collector().emit_event(
+                event_name=ExecutionEventType.REQUEST_FAILED,
+                component="orchestration_executor",
+                request_id=req_id,
+                duration_ms=latency_ms,
+                discipline=disc,
+                metadata={"error": final_state.get("execution_error")},
+            )
+        else:
+            get_collector().emit_event(
+                event_name=ExecutionEventType.REQUEST_COMPLETED,
+                component="orchestration_executor",
+                request_id=req_id,
+                duration_ms=latency_ms,
+                discipline=disc,
+                persona=pers,
+                metadata={"trust_score": final_state.get("trust_score")},
+            )
+
+        ref_meta = final_state.get("refinement_metadata") or {}
+        mem_meta = final_state.get("memory_metadata") or {}
+
+        # Persist comprehensive request telemetry record
+        err_msg = final_state.get("execution_error")
+        err_type = classify_exception(Exception(err_msg)).value if err_msg else None
+
+        telemetry_entry = RequestTelemetrySchema(
+            request_id=req_id,
+            timestamp=datetime.now(timezone.utc),
+            duration_ms=latency_ms,
+            status="failed" if status == "failed" else ("clarification" if final_state.get("needs_clarification") else "completed"),
+            discipline=disc,
+            persona_id=pers,
+            model_name=final_state.get("model_name", self.settings.model_name),
+            quality_score=final_state.get("quality_score"),
+            reliability_score=final_state.get("reliability_score"),
+            trust_score=final_state.get("trust_score"),
+            refinement_triggered=bool(ref_meta.get("refinement_triggered", False)),
+            recovery_attempts=ref_meta.get("recovery_attempts", 0),
+            refinement_accepted=(ref_meta.get("best_output_selected") == "refined"),
+            refinement_reverted=bool(ref_meta.get("refinement_status") in ("reverted", "reverted_regression")),
+            memories_used=mem_meta.get("memories_used", 0),
+            memories_extracted=1 if mem_meta.get("extraction_performed") else 0,
+            prompt_tokens=final_state.get("prompt_tokens"),
+            completion_tokens=final_state.get("completion_tokens"),
+            total_tokens=final_state.get("total_tokens"),
+            error_type=err_type,
+            needs_clarification=final_state.get("needs_clarification", False),
+        )
+        get_collector().record_request_telemetry(telemetry_entry)
 
         # Handle runtime provider exceptions
         if final_state.get("execution_status") == "failed" and final_state.get("execution_error"):

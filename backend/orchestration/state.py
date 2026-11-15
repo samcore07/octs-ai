@@ -86,3 +86,9 @@ class OrchestrationState(TypedDict, total=False):
     extracted_memories: Optional[List[Dict[str, Any]]]
     memory_metadata: Optional[Dict[str, Any]]
     memory_status: Optional[str]
+
+    # Phase 7: Observability, Metrics & Token Usage
+    correlation_id: Optional[str]
+    prompt_tokens: Optional[int]
+    completion_tokens: Optional[int]
+    total_tokens: Optional[int]

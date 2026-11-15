@@ -1,0 +1,337 @@
+/* ==========================================================================
+   Octs AI - Observability & Monitoring Dashboard Styles
+   Adheres to Swiss Tech + Industrial Lab Design System
+   ========================================================================== */
+
+.content-container {
+  padding: 32px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.date-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.select-input, .text-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.select-input:focus, .text-input:focus {
+  border-color: var(--accent);
+}
+
+/* Health Banner */
+.health-summary-banner {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+  gap: 32px;
+  align-items: center;
+}
+
+.health-status-col {
+  min-width: 160px;
+  border-right: 1px solid var(--border-subtle);
+  padding-right: 24px;
+}
+
+.health-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.health-badge.healthy {
+  background: var(--success-subtle);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.health-badge.unhealthy {
+  background: var(--danger-subtle);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.health-uptime {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-family: var(--font-mono);
+}
+
+.health-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  flex: 1;
+}
+
+.dep-item {
+  font-size: 13px;
+}
+
+.dep-name {
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.dep-val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* KPI Cards */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.metric-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-mono);
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.metric-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.latency-row {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.badge-success {
+  background: var(--success-subtle);
+  color: var(--success);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Operational Insights */
+.insights-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.panel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-header {
+  margin-bottom: 18px;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.panel-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text);
+}
+
+.font-mono-table td {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.dual-stat-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.stat-box {
+  background: var(--surface-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+
+.stat-box-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+
+.stat-line {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.stat-line strong {
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+/* Events Feed */
+.events-panel {
+  margin-bottom: 40px;
+}
+
+.events-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.events-filter-inputs {
+  display: flex;
+  gap: 12px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-badge.completed {
+  background: var(--success-subtle);
+  color: var(--success);
+}
+
+.status-badge.failed {
+  background: var(--danger-subtle);
+  color: var(--danger);
+}
+
+.status-badge.fallback {
+  background: var(--warning-subtle);
+  color: var(--warning);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-center {
+  text-align: center;
+}

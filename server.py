@@ -3,10 +3,11 @@ Octs AI - Application Entrypoint & Gateway Server
 Modularized FastAPI implementation with LangSmith tracing and configurable CORS.
 """
 
+from datetime import datetime
 import logging
 import time
-from typing import List, Optional
-from fastapi import FastAPI, HTTPException, Request
+from typing import Any, Dict, List, Optional
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,6 +18,21 @@ from backend.schemas import HealthResponse, PromptRequest, PromptResponse
 from backend.tracing import setup_tracing
 from backend.agents.routing import AgentRouter
 from backend.orchestration import OrchestrationExecutor
+from backend.observability import (
+    AnalyticsOverviewResponse,
+    AnalyticsService,
+    DetailedHealthResponse,
+    DisciplineAnalyticsItem,
+    HealthChecker,
+    LivenessResponse,
+    MemoryAnalyticsSummary,
+    PersonaAnalyticsItem,
+    ReadinessResponse,
+    RefinementAnalyticsSummary,
+    RequestCorrelationMiddleware,
+    get_request_id,
+    setup_observability_logging,
+)
 from backend.memory import (
     MemoryCreate,
     MemoryManager,
@@ -29,16 +45,13 @@ from backend.memory import (
     ProjectUpdate,
 )
 
-# Configure application logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger("octs.server")
-logging.getLogger("google_genai").setLevel(logging.ERROR)
-
 # Load validated configuration
 settings = get_settings()
+
+# Configure application logging with structured formatter
+setup_observability_logging(settings)
+logger = logging.getLogger("octs.server")
+logging.getLogger("google_genai").setLevel(logging.ERROR)
 
 # Initialize optional LangSmith observability (fails gracefully if unconfigured)
 setup_tracing(settings)
@@ -59,6 +72,9 @@ app = FastAPI(
     version="0.2.0",
     description="Enterprise multi-agent creative execution harness.",
 )
+
+# Attach Request Correlation & Diagnostics Middleware
+app.add_middleware(RequestCorrelationMiddleware)
 
 # Configure CORS with strict, configurable origins (replacing wildcard)
 app.add_middleware(
@@ -87,18 +103,40 @@ router = AgentRouter()
 memory_manager = MemoryManager()
 executor = OrchestrationExecutor(model=model, router=router, memory_manager=memory_manager)
 
+# Initialize Observability Services
+health_checker = HealthChecker(settings=settings, model=model)
+analytics_service = AnalyticsService()
 
-# 1. Health & Diagnostics Endpoint
-@app.get("/api/health", response_model=HealthResponse)
+
+# 1. Health & Diagnostics Endpoints
+@app.get("/api/health")
 def health_check():
-    """System health inspection endpoint."""
-    return HealthResponse(
-        status="ok",
-        version="0.2.0",
-        model_provider=settings.model_provider,
-        model_name=settings.model_name,
-        langsmith_tracing=settings.is_langsmith_active(),
-    )
+    """System health inspection endpoint with sanitized dependency reporting."""
+    detailed = health_checker.check_detailed_health()
+    return {
+        "status": "ok" if detailed.status.value in ("healthy", "degraded") else "unhealthy",
+        "version": "0.2.0",
+        "model_provider": settings.model_provider,
+        "model_name": settings.model_name,
+        "langsmith_tracing": settings.is_langsmith_active(),
+        "uptime_seconds": detailed.uptime_seconds,
+        "dependencies": [d.model_dump() for d in detailed.dependencies],
+    }
+
+
+@app.get("/api/health/live", response_model=LivenessResponse)
+def liveness_check():
+    """Liveness probe: confirms application process is running."""
+    return health_checker.check_liveness()
+
+
+@app.get("/api/health/ready", response_model=ReadinessResponse)
+def readiness_check(response: Response):
+    """Readiness probe: validates required operational dependencies."""
+    readiness = health_checker.check_readiness()
+    if readiness.status != "ready":
+        response.status_code = 503
+    return readiness
 
 
 # 2. Serve index.html when visiting root
@@ -129,6 +167,9 @@ def ask_gemini(request: PromptRequest, req: Request):
             explicit_owner_id=request.owner_id,
         )
 
+        # Extract request ID from correlation context or request state
+        resolved_req_id = getattr(req.state, "request_id", None) or get_request_id()
+
         response = active_executor.execute_prompt(
             prompt=request.prompt,
             role=request.role,
@@ -136,6 +177,7 @@ def ask_gemini(request: PromptRequest, req: Request):
             task_type=request.task_type,
             project_id=request.project_id,
             owner_id=identity.owner_id,
+            request_id=resolved_req_id,
         )
         return response
     except Exception as e:
@@ -265,6 +307,144 @@ def delete_memory(memory_id: str, req: Request):
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Memory record '{memory_id}' not found.")
     return {"status": "success", "message": f"Memory '{memory_id}' deleted."}
+
+
+# ==============================================================================
+# Phase 7: Observability & Operational Analytics API Endpoints
+# ==============================================================================
+
+def _parse_iso_date(date_str: Optional[str]) -> Optional[datetime]:
+    if not date_str:
+        return None
+    try:
+        return datetime.fromisoformat(date_str)
+    except Exception:
+        return None
+
+
+@app.get("/api/analytics/overview", response_model=AnalyticsOverviewResponse)
+def get_analytics_overview(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    discipline: Optional[str] = None,
+):
+    """Returns aggregated latency percentiles, throughput, quality, and health metrics."""
+    return analytics_service.get_overview(
+        start_date=_parse_iso_date(start_date),
+        end_date=_parse_iso_date(end_date),
+        discipline=discipline,
+    )
+
+
+@app.get("/api/analytics/requests")
+def get_analytics_requests(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    discipline: Optional[str] = None,
+    status: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Returns paginated request execution telemetry."""
+    return analytics_service.get_requests(
+        start_date=_parse_iso_date(start_date),
+        end_date=_parse_iso_date(end_date),
+        discipline=discipline,
+        status=status,
+        limit=min(limit, 200),
+        offset=max(0, offset),
+    )
+
+
+@app.get("/api/analytics/disciplines", response_model=List[DisciplineAnalyticsItem])
+def get_analytics_disciplines(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+):
+    """Returns operational breakdown across creative disciplines."""
+    return analytics_service.get_discipline_breakdown(
+        start_date=_parse_iso_date(start_date),
+        end_date=_parse_iso_date(end_date),
+    )
+
+
+@app.get("/api/analytics/personas", response_model=List[PersonaAnalyticsItem])
+def get_analytics_personas(
+    discipline: Optional[str] = None,
+    limit: int = 20,
+):
+    """Returns usage, quality, and latency metrics grouped by specialist persona."""
+    return analytics_service.get_persona_breakdown(
+        discipline=discipline,
+        limit=min(limit, 100),
+    )
+
+
+@app.get("/api/analytics/evaluation")
+def get_analytics_evaluation(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    discipline: Optional[str] = None,
+):
+    """Returns evaluation metrics, quality, and TrustScore distributions."""
+    overview = analytics_service.get_overview(
+        start_date=_parse_iso_date(start_date),
+        end_date=_parse_iso_date(end_date),
+        discipline=discipline,
+    )
+    return {
+        "avg_trust_score": overview.avg_trust_score,
+        "avg_quality_score": overview.avg_quality_score,
+        "total_requests_evaluated": overview.successful_requests,
+        "period_start": overview.period_start,
+        "period_end": overview.period_end,
+    }
+
+
+@app.get("/api/analytics/refinement", response_model=RefinementAnalyticsSummary)
+def get_analytics_refinement():
+    """Returns autonomous refinement success, rejection, and reversion statistics."""
+    return analytics_service.get_refinement_summary()
+
+
+@app.get("/api/analytics/memory", response_model=MemoryAnalyticsSummary)
+def get_analytics_memory():
+    """Returns persistent memory retrieval and extraction effectiveness."""
+    return analytics_service.get_memory_summary()
+
+
+@app.get("/api/analytics/model-usage")
+def get_analytics_model_usage(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+):
+    """Returns real token counts and model invocation metrics."""
+    overview = analytics_service.get_overview(
+        start_date=_parse_iso_date(start_date),
+        end_date=_parse_iso_date(end_date),
+    )
+    return {
+        "total_model_calls": overview.total_model_calls,
+        "total_tokens_used": overview.total_tokens_used,
+        "model_provider": settings.model_provider,
+        "model_name": settings.model_name,
+    }
+
+
+@app.get("/api/analytics/events")
+def get_analytics_events(
+    request_id: Optional[str] = None,
+    event_name: Optional[str] = None,
+    limit: int = 50,
+    offset: int = 0,
+):
+    """Returns paginated lifecycle events for execution inspection."""
+    return analytics_service.get_events(
+        request_id=request_id,
+        event_name=event_name,
+        limit=min(limit, 200),
+        offset=max(0, offset),
+    )
 
 
 # 5. Serve static files (HTML, CSS, JS, pages/)

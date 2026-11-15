@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observability & Production Monitoring | Octs AI</title>
+    <!-- Prevent Theme FOUC -->
+    <script>
+      (function() {
+        try {
+          const saved = localStorage.getItem('octs_ai_theme');
+          if (saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/observability.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="brand-wrapper">
+                    <div class="brand-icon">OCTS</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Octs AI</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="agents.html">
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
+                </a>
+                <a class="nav-item" href="memory.html">
+                    <span class="nav-icon">🧠</span>
+                    <span>Memory Hub</span>
+                    <span class="nav-badge" style="background: rgba(96, 165, 250, 0.15); color: #3B82F6;">Persistent</span>
+                </a>
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item" href="efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item" href="failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                </a>
+                <a class="nav-item active" href="observability.html">
+                    <span class="nav-icon">📡</span>
+                    <span>Observability</span>
+                    <span class="nav-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">Live</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item" href="help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item" href="settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <header class="topbar">
+                <div class="topbar-breadcrumb">
+                    <span class="breadcrumb-root">Octs AI</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-root">Reliability & Stats</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Observability & Monitoring</span>
+                </div>
+                <div class="topbar-actions">
+                    <div class="status-indicator">
+                        <span class="status-dot" id="systemHealthDot"></span>
+                        <span class="status-text" id="systemHealthText">Checking Probes...</span>
+                    </div>
+                    <button class="theme-toggle" id="themeToggleBtn" title="Toggle Dark/Light Mode">
+                        <span class="theme-icon">◐</span>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="refreshBtn">
+                        <span>↻ Refresh</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-container">
+                <!-- Page Title -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">System Observability & Operational Health</h1>
+                        <p class="page-subtitle">Real-time telemetry, execution latency percentiles, error taxonomy, and persistent event auditing.</p>
+                    </div>
+                    <div class="date-filter-group">
+                        <label for="disciplineFilter" class="filter-label">Filter Discipline:</label>
+                        <select id="disciplineFilter" class="select-input">
+                            <option value="">All Disciplines</option>
+                            <option value="writers">Writers</option>
+                            <option value="musicians">Musicians</option>
+                            <option value="creators">Content Creators</option>
+                            <option value="designers">Designers</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Health Banner -->
+                <div class="health-summary-banner" id="healthBanner">
+                    <div class="health-status-col">
+                        <div class="health-badge healthy" id="healthStatusBadge">System Healthy</div>
+                        <div class="health-uptime" id="uptimeText">Uptime: --</div>
+                    </div>
+                    <div class="health-details-grid" id="healthDependenciesGrid">
+                        <!-- Dynamic dependency health items -->
+                        <div class="dep-item"><span class="dep-name">Memory DB:</span> <span class="dep-val" id="depMemoryDb">Checking...</span></div>
+                        <div class="dep-item"><span class="dep-name">Telemetry DB:</span> <span class="dep-val" id="depTelemetryDb">Checking...</span></div>
+                        <div class="dep-item"><span class="dep-name">Model Provider:</span> <span class="dep-val" id="depModel">Checking...</span></div>
+                        <div class="dep-item"><span class="dep-name">Agent Registry:</span> <span class="dep-val" id="depRegistry">16/16 Personas</span></div>
+                    </div>
+                </div>
+
+                <!-- KPI Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">TOTAL REQUESTS</span>
+                            <span class="metric-icon">📊</span>
+                        </div>
+                        <div class="metric-value" id="kpiTotalRequests">0</div>
+                        <div class="metric-footer">
+                            <span class="badge-success" id="kpiSuccessRate">0% Success</span>
+                            <span class="metric-subtext" id="kpiFailedRequests">0 Failed</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">LATENCY PERCENTILES</span>
+                            <span class="metric-icon">⏱</span>
+                        </div>
+                        <div class="metric-value" id="kpiAvgLatency">0 ms</div>
+                        <div class="metric-footer latency-row">
+                            <span>P50: <strong id="kpiP50">0ms</strong></span>
+                            <span>P95: <strong id="kpiP95">0ms</strong></span>
+                            <span>P99: <strong id="kpiP99">0ms</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">AVG TRUSTSCORE</span>
+                            <span class="metric-icon">🛡</span>
+                        </div>
+                        <div class="metric-value" id="kpiTrustScore">--</div>
+                        <div class="metric-footer">
+                            <span>Quality: <strong id="kpiQualityScore">--</strong></span>
+                            <span class="metric-subtext">Composite Evaluation</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">MODEL & TOKENS</span>
+                            <span class="metric-icon">⚙</span>
+                        </div>
+                        <div class="metric-value" id="kpiTotalTokens">--</div>
+                        <div class="metric-footer">
+                            <span id="kpiModelCalls">0 Model Calls</span>
+                            <span class="metric-subtext" id="kpiProviderLabel">Gemini</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Two Column Operational Insights -->
+                <div class="insights-row">
+                    <!-- Discipline Breakdown -->
+                    <div class="card panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Discipline Performance Breakdown</h2>
+                            <span class="panel-sub">Real telemetry across creative disciplines</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Discipline</th>
+                                        <th>Requests</th>
+                                        <th>Success Rate</th>
+                                        <th>Avg Latency</th>
+                                        <th>TrustScore</th>
+                                        <th>Refinements</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="disciplineTableBody">
+                                    <tr><td colspan="6" class="text-center text-muted">Loading telemetry...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Refinement & Memory Summary -->
+                    <div class="card panel-card">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Refinement & Memory Reliability</h2>
+                            <span class="panel-sub">Autonomous self-correction & persistence efficacy</span>
+                        </div>
+                        <div class="dual-stat-container">
+                            <div class="stat-box">
+                                <div class="stat-box-title">Autonomous Refinement</div>
+                                <div class="stat-line"><span>Attempts:</span> <strong id="statRefAttempts">0</strong></div>
+                                <div class="stat-line"><span>Accepted:</span> <strong id="statRefAccepted">0</strong></div>
+                                <div class="stat-line"><span>Rejected:</span> <strong id="statRefRejected">0</strong></div>
+                                <div class="stat-line"><span>Reversions:</span> <strong id="statRefReverted">0</strong></div>
+                                <div class="stat-line"><span>Acceptance Rate:</span> <strong id="statRefRate">0%</strong></div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-box-title">Memory Intelligence</div>
+                                <div class="stat-line"><span>Context Retrievals:</span> <strong id="statMemRetrievals">0</strong></div>
+                                <div class="stat-line"><span>Avg Memories / Req:</span> <strong id="statMemAvg">0.0</strong></div>
+                                <div class="stat-line"><span>Extracted Memories:</span> <strong id="statMemExtracted">0</strong></div>
+                                <div class="stat-line"><span>Persistence Success:</span> <strong id="statMemSuccess">100%</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Lifecycle Events Feed -->
+                <div class="card panel-card events-panel">
+                    <div class="panel-header events-header-flex">
+                        <div>
+                            <h2 class="panel-title">Execution Lifecycle Events</h2>
+                            <span class="panel-sub">Correlated telemetry stream with unique Request IDs</span>
+                        </div>
+                        <div class="events-filter-inputs">
+                            <input type="text" id="eventRequestIdFilter" class="text-input" placeholder="Search Request ID...">
+                            <select id="eventNameFilter" class="select-input">
+                                <option value="">All Lifecycle Events</option>
+                                <option value="request_started">request_started</option>
+                                <option value="request_completed">request_completed</option>
+                                <option value="request_failed">request_failed</option>
+                                <option value="routing_completed">routing_completed</option>
+                                <option value="model_execution_completed">model_execution_completed</option>
+                                <option value="evaluation_completed">evaluation_completed</option>
+                                <option value="peer_review_completed">peer_review_completed</option>
+                                <option value="refinement_completed">refinement_completed</option>
+                                <option value="memory_retrieval_completed">memory_retrieval_completed</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table font-mono-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Event</th>
+                                    <th>Component</th>
+                                    <th>Request ID</th>
+                                    <th>Discipline / Persona</th>
+                                    <th>Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody id="eventsTableBody">
+                                <tr><td colspan="6" class="text-center text-muted">Awaiting operational events...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/common.js"></script>
+    <script src="js/observability.js"></script>
+</body>
+</html>
