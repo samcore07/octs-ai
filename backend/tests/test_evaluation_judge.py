@@ -105,7 +105,7 @@ def test_llm_judge_malformed_response_returns_invalid_response_status():
 def test_llm_judge_timeout_and_error_sanitization():
     """Verify LLMJudge captures timeout/error, classifies status, and sanitizes API secrets."""
     mock_model = MagicMock()
-    mock_model.invoke.side_effect = RuntimeError("API call timeout after 10000ms (key=AIzaSyA12345678901234567890123456789012)")
+    mock_model.invoke.side_effect = RuntimeError("API call timeout after 10000ms (key=MOCK_TEST_SECRET_TOKEN_DO_NOT_EXPOSE)")
 
     judge = LLMJudge(model=mock_model, max_retries=1)
     criteria_meta = {"narrative_coherence": {"name": "Narrative Coherence", "description": "Flow"}}
@@ -121,7 +121,7 @@ def test_llm_judge_timeout_and_error_sanitization():
 
     assert results is None
     assert status == JudgeStatus.TIMEOUT
-    assert "AIza" not in reason
+    assert "MOCK_TEST_SECRET_TOKEN" not in reason
     assert "[REDACTED" in reason
 
 
