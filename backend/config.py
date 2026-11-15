@@ -64,6 +64,17 @@ class Settings(BaseSettings):
     peer_review_enabled: bool = True
     peer_review_timeout: float = 10.0
 
+    # Phase 6: Memory & Persistent Intelligence Settings
+    memory_enabled: bool = True
+    memory_auto_extraction: bool = True
+    memory_retrieval_enabled: bool = True
+    memory_max_retrieved: int = 10
+    memory_max_context_tokens: int = 2000
+    memory_relevance_threshold: float = 0.60
+    memory_database_url: str = "sqlite:///./octs_memory.db"
+    memory_extraction_timeout: float = 10.0
+    memory_default_owner_id: str = "default_user"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

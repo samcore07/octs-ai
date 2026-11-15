@@ -68,6 +68,11 @@
                     <span class="nav-icon">⇄</span>
                     <span>Workflows</span>
                 </a>
+                <a class="nav-item" href="pages/memory.html">
+                    <span class="nav-icon">🧠</span>
+                    <span>Memory Hub</span>
+                    <span class="nav-badge" style="background: rgba(96, 165, 250, 0.15); color: #3B82F6;">Persistent</span>
+                </a>
 
                 <div class="nav-group-label">RELIABILITY & STATS</div>
                 <a class="nav-item" href="pages/efficiency.html">
@@ -312,9 +317,17 @@
                                 <span class="panel-title">AI Creative Harness</span>
                                 <span class="panel-subtitle-mono">/ Multi-Agent Dispatcher</span>
                             </div>
-                            <div class="panel-status">
-                                <span class="status-dot" style="background-color: var(--success);"></span>
-                                <span>Context Aware</span>
+                            <div class="panel-status-group" style="display: flex; align-items: center; gap: 12px;">
+                                <div class="project-selector-wrapper" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px;">
+                                    <label for="activeProjectSelect" style="color: var(--text-secondary); font-weight: 500;">Project:</label>
+                                    <select id="activeProjectSelect" class="project-select-dropdown" style="padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 11px;">
+                                        <option value="">Global (No Project)</option>
+                                    </select>
+                                </div>
+                                <div class="panel-status">
+                                    <span class="status-dot" style="background-color: var(--success);"></span>
+                                    <span>Context Aware</span>
+                                </div>
                             </div>
                         </div>
 
@@ -399,6 +412,10 @@
                             <div class="telemetry-item" id="refinementItem" style="display: none;">
                                 <span>Refinement:</span>
                                 <strong id="refinementBadge" style="color: #60A5FA;">--</strong>
+                            </div>
+                            <div class="telemetry-item" id="memoryItem" style="display: none;">
+                                <span>Memory:</span>
+                                <strong id="memoryBadge" style="color: #A78BFA;">--</strong>
                             </div>
                         </div>
 

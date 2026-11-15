@@ -31,6 +31,14 @@ class PromptRequest(BaseModel):
         default=None,
         description="Optional explicit task category override.",
     )
+    project_id: Optional[str] = Field(
+        default=None,
+        description="Optional creative project identifier for scoped persistent memory.",
+    )
+    owner_id: Optional[str] = Field(
+        default=None,
+        description="Optional caller or tenant identifier (resolved via identity provider).",
+    )
 
     @field_validator("prompt")
     @classmethod
@@ -73,6 +81,7 @@ class PromptResponse(BaseModel):
     execution_status: Optional[str] = Field(default=None, description="Status code of the orchestration execution.")
     evaluation: Optional[Dict[str, Any]] = Field(default=None, description="Structured evaluation payload containing independent Quality and Reliability metrics.")
     refinement: Optional[Dict[str, Any]] = Field(default=None, description="Structured autonomous refinement and peer review metadata.")
+    memory: Optional[Dict[str, Any]] = Field(default=None, description="Structured persistent memory and context retrieval telemetry.")
 
 
 class HealthResponse(BaseModel):

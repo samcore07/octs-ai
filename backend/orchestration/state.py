@@ -77,3 +77,12 @@ class OrchestrationState(TypedDict, total=False):
     evaluation_latency_ms: Optional[int]
     model_call_count: Optional[int]
     reviewer_call_count: Optional[int]
+
+    # Phase 6: Memory & Persistent Intelligence
+    owner_id: Optional[str]
+    project_id: Optional[str]
+    memory_context: Optional[str]
+    retrieved_memories: Optional[List[Dict[str, Any]]]
+    extracted_memories: Optional[List[Dict[str, Any]]]
+    memory_metadata: Optional[Dict[str, Any]]
+    memory_status: Optional[str]

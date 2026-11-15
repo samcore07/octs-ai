@@ -16,16 +16,21 @@ from backend.orchestration.edges import (
     route_after_task_routing,
 )
 from backend.orchestration.nodes import (
+    build_context_node,
     evaluate_execution_node,
     evaluate_refinement_node,
     execute_model_node,
+    extract_memory_node,
     finalize_execution_node,
     handle_routing_fallback_node,
+    identify_context_node,
     improvement_analyzer_node,
     peer_review_node,
+    persist_memory_node,
     prepare_persona_node,
     refine_output_node,
     refinement_controller_node,
+    retrieve_memory_node,
     route_request_node,
     synthesize_feedback_node,
     validate_input_node,
@@ -40,10 +45,12 @@ def build_orchestration_graph(
     registry: Optional[Any] = None,
     evaluator_engine: Optional[Any] = None,
     refinement_engine: Optional[Any] = None,
+    memory_manager: Optional[Any] = None,
     model_override: Optional[Any] = None,
     router_override: Optional[Any] = None,
     evaluator_engine_override: Optional[Any] = None,
     refinement_engine_override: Optional[Any] = None,
+    memory_manager_override: Optional[Any] = None,
 ) -> StateGraph:
     """
     Constructs the uncompiled StateGraph for creative task orchestration.
@@ -54,10 +61,24 @@ def build_orchestration_graph(
     active_router = router if router is not None else router_override
     active_engine = evaluator_engine if evaluator_engine is not None else evaluator_engine_override
     active_refinement = refinement_engine if refinement_engine is not None else refinement_engine_override
+    active_memory = memory_manager if memory_manager is not None else memory_manager_override
 
     if active_refinement is None:
         from backend.refinement.engine import RefinementEngine
         active_refinement = RefinementEngine(model=active_model)
+
+    if active_memory is None:
+        from backend.memory.memory_manager import MemoryManager
+        active_memory = MemoryManager()
+
+    def _identify_context_node(state: OrchestrationState):
+        return identify_context_node(state)
+
+    def _retrieve_memory_node(state: OrchestrationState):
+        return retrieve_memory_node(state, memory_manager=active_memory)
+
+    def _build_context_node(state: OrchestrationState):
+        return build_context_node(state)
 
     def _route_node(state: OrchestrationState):
         return route_request_node(state, router=active_router, registry=registry)
@@ -92,8 +113,20 @@ def build_orchestration_graph(
     def _improvement_analyzer_node(state: OrchestrationState):
         return improvement_analyzer_node(state, refinement_engine=active_refinement)
 
+    def _extract_memory_node(state: OrchestrationState):
+        return extract_memory_node(state, memory_manager=active_memory)
+
+    def _persist_memory_node(state: OrchestrationState):
+        return persist_memory_node(state, memory_manager=active_memory)
+
     # Register workflow nodes
     workflow.add_node("validate_input", validate_input_node)
+
+    # Phase 6: Memory & Context nodes
+    workflow.add_node("identify_context", _identify_context_node)
+    workflow.add_node("retrieve_memory", _retrieve_memory_node)
+    workflow.add_node("build_context", _build_context_node)
+
     workflow.add_node("route_request", _route_node)
     workflow.add_node("handle_routing_fallback", _fallback_node)
     workflow.add_node("prepare_persona", _prep_node)
@@ -111,6 +144,10 @@ def build_orchestration_graph(
 
     workflow.add_node("finalize_execution", finalize_execution_node)
 
+    # Phase 6: Post-execution Memory Extraction & Persistence nodes
+    workflow.add_node("extract_memory", _extract_memory_node)
+    workflow.add_node("persist_memory", _persist_memory_node)
+
     # 1. Entry point into validation
     workflow.add_edge(START, "validate_input")
 
@@ -119,10 +156,15 @@ def build_orchestration_graph(
         "validate_input",
         route_after_input_validation,
         {
-            "route_request": "route_request",
+            "identify_context": "identify_context",
             "finalize_execution": "finalize_execution",
         },
     )
+
+    # Phase 6: Context & Memory Retrieval Pipeline
+    workflow.add_edge("identify_context", "retrieve_memory")
+    workflow.add_edge("retrieve_memory", "build_context")
+    workflow.add_edge("build_context", "route_request")
 
     # 3. Routing conditional branch (supports Case A, B, and C clarification)
     workflow.add_conditional_edges(
@@ -197,8 +239,10 @@ def build_orchestration_graph(
     # 14. Improvement Analyzer loops back to Refinement Controller for bounded termination checks
     workflow.add_edge("improvement_analyzer", "refinement_controller")
 
-    # 15. Finalization terminates graph execution
-    workflow.add_edge("finalize_execution", END)
+    # 15. Finalization transitions into Memory Extraction & Persistence
+    workflow.add_edge("finalize_execution", "extract_memory")
+    workflow.add_edge("extract_memory", "persist_memory")
+    workflow.add_edge("persist_memory", END)
 
     return workflow
 
@@ -212,10 +256,12 @@ def get_orchestration_graph(
     registry: Optional[Any] = None,
     evaluator_engine: Optional[Any] = None,
     refinement_engine: Optional[Any] = None,
+    memory_manager: Optional[Any] = None,
     model_override: Optional[Any] = None,
     router_override: Optional[Any] = None,
     evaluator_engine_override: Optional[Any] = None,
     refinement_engine_override: Optional[Any] = None,
+    memory_manager_override: Optional[Any] = None,
 ):
     """
     Returns a compiled LangGraph executable for production or test environments.
@@ -226,6 +272,7 @@ def get_orchestration_graph(
     active_router = router if router is not None else router_override
     active_engine = evaluator_engine if evaluator_engine is not None else evaluator_engine_override
     active_refinement = refinement_engine if refinement_engine is not None else refinement_engine_override
+    active_memory = memory_manager if memory_manager is not None else memory_manager_override
 
     has_overrides = (
         active_model is not None
@@ -234,6 +281,7 @@ def get_orchestration_graph(
         or active_engine is not None
         or refinement_engine is not None
         or refinement_engine_override is not None
+        or active_memory is not None
     )
 
     if has_overrides:
@@ -243,6 +291,7 @@ def get_orchestration_graph(
             registry=registry,
             evaluator_engine=active_engine,
             refinement_engine=active_refinement,
+            memory_manager=active_memory,
         )
         return graph.compile()
 

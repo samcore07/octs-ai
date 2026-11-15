@@ -163,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRoleSelection();
   initChatExecution();
   initThemeToggle();
+  initProjectSelector();
   
   // If user previously selected a role, render that workspace immediately
   if (currentRole && ROLES_DATA[currentRole]) {
@@ -552,6 +553,10 @@ async function submitTask() {
   const pipelineIndicator = document.getElementById("pipelineIndicator");
   const refinementItem = document.getElementById("refinementItem");
   const refinementBadge = document.getElementById("refinementBadge");
+  const memoryItem = document.getElementById("memoryItem");
+  const memoryBadge = document.getElementById("memoryBadge");
+  const activeProjectSelect = document.getElementById("activeProjectSelect");
+  const selectedProjectId = activeProjectSelect && activeProjectSelect.value ? activeProjectSelect.value : null;
 
   const userInput = chatInput ? chatInput.value.trim() : "";
   if (!userInput) return;
@@ -582,7 +587,8 @@ async function submitTask() {
   try {
     const payload = {
       prompt: userInput,
-      role: currentRole || null
+      role: currentRole || null,
+      project_id: selectedProjectId || undefined
     };
 
     const response = await fetch("/ask", {
@@ -629,6 +635,24 @@ async function submitTask() {
         refinementBadge.style.color = "#60A5FA";
       } else {
         refinementItem.style.display = "none";
+      }
+    }
+
+    if (memoryItem && memoryBadge) {
+      if (data.memory && data.memory.enabled) {
+        memoryItem.style.display = "flex";
+        if (data.memory.memories_used > 0) {
+          memoryBadge.textContent = `${data.memory.memories_used} active`;
+          memoryBadge.style.color = "#A78BFA";
+        } else if (data.memory.extraction_performed) {
+          memoryBadge.textContent = `Extracted`;
+          memoryBadge.style.color = "#34D399";
+        } else {
+          memoryBadge.textContent = `Online`;
+          memoryBadge.style.color = "#9CA3AF";
+        }
+      } else {
+        memoryItem.style.display = "none";
       }
     }
 
@@ -729,6 +753,30 @@ function copyResponse() {
   });
 }
 
+// 7. Project Context Initializer
+async function initProjectSelector() {
+  const activeProjectSelect = document.getElementById("activeProjectSelect");
+  if (!activeProjectSelect) return;
+
+  try {
+    const res = await fetch("/api/memory/projects");
+    if (!res.ok) return;
+    const projects = await res.json();
+    if (Array.isArray(projects) && projects.length > 0) {
+      // Clear all except global
+      activeProjectSelect.innerHTML = '<option value="">Global (No Project)</option>';
+      projects.forEach((proj) => {
+        const opt = document.createElement("option");
+        opt.value = proj.project_id;
+        opt.textContent = `${proj.name} (${proj.discipline || 'general'})`;
+        activeProjectSelect.appendChild(opt);
+      });
+    }
+  } catch (err) {
+    console.debug("Projects API unavailable:", err);
+  }
+}
+
 // Global API Exposure for Compatibility
 window.submitTask = submitTask;
 window.sendMessage = submitTask;
@@ -741,3 +789,4 @@ window.insertAndExecute = insertAndExecute;
 window.clearPromptInput = clearPromptInput;
 window.updateUsername = updateUsername;
 window.applyTheme = applyTheme;
+window.initProjectSelector = initProjectSelector;

@@ -186,7 +186,15 @@ def prepare_persona_node(state: OrchestrationState, registry=None) -> Dict[str, 
     try:
         system_prompt = persona.format_system_prompt()
         prompt_template = persona.build_prompt_template()
-        messages: List[BaseMessage] = prompt_template.format_messages(input=state["original_prompt"])
+
+        # Phase 6: Inject retrieved memory context if present
+        memory_ctx = state.get("memory_context")
+        if memory_ctx and memory_ctx.strip():
+            input_text = f"{memory_ctx.strip()}\n\nTask:\n{state['original_prompt']}"
+        else:
+            input_text = state["original_prompt"]
+
+        messages: List[BaseMessage] = prompt_template.format_messages(input=input_text)
 
         return {
             "persona_system_prompt": system_prompt,
@@ -817,3 +825,193 @@ def improvement_analyzer_node(
             res["trust_breakdown"] = best_ev["trust_breakdown"]
 
     return res
+
+
+# ==============================================================================
+# Phase 6: Memory & Persistent Intelligence Nodes
+# ==============================================================================
+
+def identify_context_node(state: OrchestrationState) -> Dict[str, Any]:
+    """
+    Phase 6 Node: Identity & Context Resolution
+    Normalizes caller identity, project scope, and session continuity tokens.
+    """
+    owner_id = (state.get("owner_id") or "default_user").strip()
+    project_id = state.get("project_id")
+    session_id = state.get("session_id")
+
+    return {
+        "owner_id": owner_id,
+        "project_id": project_id,
+        "session_id": session_id,
+        "execution_status": "context_identified",
+    }
+
+
+def retrieve_memory_node(
+    state: OrchestrationState,
+    memory_manager: Optional[Any] = None,
+    manager_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 6 Node: Context-Aware Memory Retrieval
+    Queries the persistent memory repository for active, scope-compliant memories.
+    """
+    from backend.memory.memory_manager import MemoryManager
+
+    active_manager = memory_manager if memory_manager is not None else manager_override
+    if active_manager is None:
+        active_manager = MemoryManager()
+
+    prompt = state.get("original_prompt", "")
+    owner_id = state.get("owner_id", "default_user")
+    project_id = state.get("project_id")
+    discipline = state.get("discipline_id")
+
+    try:
+        context_str, telemetry_items = active_manager.retrieve_context(
+            prompt=prompt,
+            owner_id=owner_id,
+            project_id=project_id,
+            discipline=discipline,
+        )
+
+        return {
+            "memory_context": context_str,
+            "retrieved_memories": [item.model_dump() for item in telemetry_items],
+            "execution_status": "memory_retrieved",
+        }
+    except Exception as e:
+        logger.error(f"Error in retrieve_memory_node: {e}", exc_info=True)
+        return {
+            "memory_context": "",
+            "retrieved_memories": [],
+            "execution_status": "memory_retrieval_failed",
+        }
+
+
+def build_context_node(state: OrchestrationState) -> Dict[str, Any]:
+    """
+    Phase 6 Node: Context Assembly & Bridge
+    Finalizes context container before task routing.
+    """
+    return {
+        "execution_status": "context_built",
+    }
+
+
+def extract_memory_node(
+    state: OrchestrationState,
+    memory_manager: Optional[Any] = None,
+    manager_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 6 Node: Conservative Memory Extraction
+    Extracts durable preferences, decisions, and constraints from successful generation.
+    Bypasses extraction on clarification paths or failed runs.
+    """
+    from backend.memory.memory_manager import MemoryManager
+
+    active_manager = memory_manager if memory_manager is not None else manager_override
+    if active_manager is None:
+        active_manager = MemoryManager()
+
+    if not active_manager.settings.memory_enabled or not active_manager.settings.memory_auto_extraction:
+        return {
+            "memory_status": "skipped",
+        }
+
+    status = state.get("execution_status")
+    if state.get("needs_clarification") or status in ("failed", "validation_failed", "execution_failed"):
+        return {
+            "memory_status": "skipped",
+        }
+
+    prompt = state.get("original_prompt", "")
+    # Use final selected winning artifact, never an unselected or regressed draft
+    output = state.get("best_output") or state.get("generated_output") or ""
+    owner_id = state.get("owner_id", "default_user")
+    project_id = state.get("project_id")
+    discipline = state.get("discipline_id")
+    session_id = state.get("session_id")
+
+    try:
+        extracted = active_manager.extractor.extract_memories(
+            prompt=prompt,
+            output=output,
+            discipline=discipline,
+            project_id=project_id,
+            owner_id=owner_id,
+            session_id=session_id,
+        )
+
+        return {
+            "extracted_memories": [m.model_dump() for m in extracted],
+            "memory_status": "extracted",
+        }
+    except Exception as e:
+        logger.warning(f"Error in extract_memory_node: {e}", exc_info=True)
+        return {
+            "extracted_memories": [],
+            "memory_status": "extraction_failed",
+        }
+
+
+def persist_memory_node(
+    state: OrchestrationState,
+    memory_manager: Optional[Any] = None,
+    manager_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 6 Node: Memory Persistence & Telemetry Assembly
+    Consolidates new memories into the database and builds final MemoryMetadata.
+    """
+    from backend.memory.memory_manager import MemoryManager
+    from backend.memory.schemas import MemoryMetadata, MemoryRecord, RetrievedMemoryItem
+
+    active_manager = memory_manager if memory_manager is not None else manager_override
+    if active_manager is None:
+        active_manager = MemoryManager()
+
+    retrieved_dicts = state.get("retrieved_memories") or []
+    retrieved_items = [RetrievedMemoryItem(**d) for d in retrieved_dicts]
+    project_id = state.get("project_id")
+
+    mem_status = state.get("memory_status")
+    if mem_status == "skipped":
+        metadata = MemoryMetadata(
+            enabled=active_manager.settings.memory_enabled,
+            retrieval_performed=bool(retrieved_items),
+            memories_used=len(retrieved_items),
+            extraction_performed=False,
+            persistence_status="skipped",
+            memories_retrieved=retrieved_items,
+            project_id=project_id,
+        )
+        return {"memory_metadata": metadata.model_dump()}
+
+    extracted_dicts = state.get("extracted_memories") or []
+    persistence_status = "not_attempted"
+
+    if extracted_dicts:
+        try:
+            records = [MemoryRecord(**d) for d in extracted_dicts]
+            active_manager.consolidator.consolidate_and_save(records)
+            persistence_status = "success"
+        except Exception as e:
+            logger.error(f"Error persisting memories: {e}", exc_info=True)
+            persistence_status = "failed"
+    else:
+        persistence_status = "success" if state.get("execution_status") == "completed" else "not_attempted"
+
+    metadata = MemoryMetadata(
+        enabled=active_manager.settings.memory_enabled,
+        retrieval_performed=bool(retrieved_items),
+        memories_used=len(retrieved_items),
+        extraction_performed=bool(extracted_dicts),
+        persistence_status=persistence_status,
+        memories_retrieved=retrieved_items,
+        project_id=project_id,
+    )
+
+    return {"memory_metadata": metadata.model_dump()}

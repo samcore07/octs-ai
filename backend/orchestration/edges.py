@@ -8,11 +8,11 @@ from backend.orchestration.state import OrchestrationState
 
 def route_after_input_validation(state: OrchestrationState) -> str:
     """
-    Decides whether to proceed to routing or short-circuit to finalization on validation error.
+    Decides whether to proceed to context identification or short-circuit to finalization on validation error.
     """
     if state.get("execution_status") == "validation_failed":
         return "finalize_execution"
-    return "route_request"
+    return "identify_context"
 
 
 def route_after_task_routing(state: OrchestrationState) -> str:

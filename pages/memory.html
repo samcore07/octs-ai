@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory & Persistent Intelligence | Octs AI</title>
+    <!-- Prevent Theme FOUC -->
+    <script>
+      (function() {
+        try {
+          const saved = localStorage.getItem('octs_ai_theme');
+          if (saved === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.removeAttribute('data-theme');
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/memory.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="brand-wrapper">
+                    <div class="brand-icon">OCTS</div>
+                    <div class="brand-text">
+                        <span class="brand-name">Octs AI</span>
+                        <span class="brand-version">AI Creative Harness</span>
+                    </div>
+                </a>
+                <button class="sidebar-toggle-btn" id="sidebarToggleBtn" title="Toggle Sidebar">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="sidebar-nav" aria-label="Harness Navigation">
+                <div class="nav-group-label">WORKSPACE</div>
+                <a class="nav-item" href="../index.html">
+                    <span class="nav-icon">⌂</span>
+                    <span>Dashboard</span>
+                </a>
+                <a class="nav-item" href="agents.html">
+                    <span class="nav-icon">◈</span>
+                    <span>My Agents</span>
+                    <span class="nav-badge">4 Active</span>
+                </a>
+                <a class="nav-item" href="workflows.html">
+                    <span class="nav-icon">⇄</span>
+                    <span>Workflows</span>
+                </a>
+                <a class="nav-item active" href="memory.html">
+                    <span class="nav-icon">🧠</span>
+                    <span>Memory Hub</span>
+                    <span class="nav-badge" style="background: rgba(96, 165, 250, 0.15); color: #3B82F6;">Persistent</span>
+                </a>
+
+                <div class="nav-group-label">RELIABILITY & STATS</div>
+                <a class="nav-item" href="efficiency.html">
+                    <span class="nav-icon">⚡</span>
+                    <span>Efficiency</span>
+                </a>
+                <a class="nav-item" href="success.html">
+                    <span class="nav-icon">▥</span>
+                    <span>Success Rate</span>
+                </a>
+                <a class="nav-item" href="failures.html">
+                    <span class="nav-icon">🛡</span>
+                    <span>Failures & Recovery</span>
+                </a>
+
+                <div class="nav-group-label">SYSTEM</div>
+                <a class="nav-item" href="help.html">
+                    <span class="nav-icon">?</span>
+                    <span>Help & Support</span>
+                </a>
+                <a class="nav-item" href="settings.html">
+                    <span class="nav-icon">⚙</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <header class="topbar">
+                <div class="topbar-breadcrumb">
+                    <span class="breadcrumb-root">Octs AI</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-root">Workspace</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-current">Memory Hub</span>
+                </div>
+
+                <div class="topbar-actions">
+                    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Toggle Dark Mode" title="Toggle theme">
+                        <svg class="sun-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <svg class="moon-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-container" style="padding: 28px;">
+                <!-- Header Banner -->
+                <div class="memory-header-card">
+                    <div class="memory-header-info">
+                        <h2>Memory & Persistent Intelligence</h2>
+                        <p>
+                            Cross-session creative memory retaining verified user preferences, project lore, established decisions, and mandatory craft constraints. Scoped strictly to prevent cross-project contamination.
+                        </p>
+                    </div>
+                    <div>
+                        <button class="primary-btn" onclick="createProjectPrompt()" style="padding: 8px 16px; font-size: 13px; font-weight: 600; background: var(--accent); color: #FFF; border: none; border-radius: var(--radius); cursor: pointer;">
+                            + New Project
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Telemetry Stats Grid -->
+                <div class="memory-stats-grid">
+                    <div class="memory-stat-card">
+                        <div class="memory-stat-label">Stored Memories</div>
+                        <div class="memory-stat-val" id="statTotalMemories">0</div>
+                    </div>
+                    <div class="memory-stat-card">
+                        <div class="memory-stat-label">Active Projects</div>
+                        <div class="memory-stat-val" id="statActiveProjects">0</div>
+                    </div>
+                    <div class="memory-stat-card">
+                        <div class="memory-stat-label">Craft Constraints</div>
+                        <div class="memory-stat-val" id="statConstraints">0</div>
+                    </div>
+                    <div class="memory-stat-card">
+                        <div class="memory-stat-label">User Preferences</div>
+                        <div class="memory-stat-val" id="statPreferences">0</div>
+                    </div>
+                </div>
+
+                <!-- Filtering Toolbar -->
+                <div class="memory-filter-toolbar">
+                    <div class="filter-group">
+                        <span style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-right: 4px;">DISCIPLINE:</span>
+                        <button class="filter-pill-btn active" data-disc-filter="all">All</button>
+                        <button class="filter-pill-btn" data-disc-filter="writers">Writers</button>
+                        <button class="filter-pill-btn" data-disc-filter="musicians">Musicians</button>
+                        <button class="filter-pill-btn" data-disc-filter="creators">Creators</button>
+                        <button class="filter-pill-btn" data-disc-filter="designers">Designers</button>
+                    </div>
+                    <div>
+                        <input
+                            type="text"
+                            id="memorySearchInput"
+                            class="memory-search-input"
+                            placeholder="Filter memories by keyword..."
+                        />
+                    </div>
+                </div>
+
+                <!-- Memories List -->
+                <div class="memories-container" id="memoriesList">
+                    <!-- Populated dynamically by memory.js -->
+                </div>
+
+                <!-- Projects Management Section -->
+                <div class="projects-section-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 700; color: var(--text);">Creative Projects</h3>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                                Projects provide boundary isolation for character lore, world settings, and continuity rules.
+                            </p>
+                        </div>
+                    </div>
+                    <div id="projectsList" style="background: var(--surface-alt); border-radius: var(--radius); border: 1px solid var(--border);">
+                        <!-- Populated dynamically by memory.js -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/memory.js" defer></script>
+</body>
+</html>
