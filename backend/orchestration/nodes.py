@@ -224,7 +224,9 @@ def execute_model_node(
         }
 
     try:
+        t0 = time.perf_counter()
         response = active_model.invoke(model_input)
+        duration_ms = int((time.perf_counter() - t0) * 1000)
 
         raw_content = getattr(response, "content", response)
         if isinstance(raw_content, str):
@@ -241,6 +243,8 @@ def execute_model_node(
             "generated_output": reply_text,
             "model_name": settings.model_name,
             "execution_status": "executed",
+            "initial_generation_latency_ms": duration_ms,
+            "model_call_count": 1,
         }
     except Exception as e:
         logger.error(f"LLM execution error during node invocation: {e}")
@@ -324,25 +328,492 @@ def evaluate_execution_node(
 def finalize_execution_node(state: OrchestrationState) -> Dict[str, Any]:
     """
     Node F: Finalization
-    Calculates execution duration, populates execution timestamps, and finalizes metadata.
+    Calculates execution duration, populates execution timestamps, finalizes telemetry,
+    and sets best output and RefinementMetadata.
     Preserves clarification responses without overwriting them.
+    Guarantees that reply, evaluation, trust_score, and telemetry are strictly consistent.
     """
+    from backend.refinement.schemas import RefinementMetadata, RefinementStatus
+
     started_at = state.get("started_at")
     now_perf = time.perf_counter()
     elapsed_ms = int((now_perf - started_at) * 1000) if started_at else 0
+    settings = get_settings()
 
     current_status = state.get("execution_status", "unknown")
     has_error = bool(state.get("execution_error"))
 
     if current_status == "needs_clarification":
         final_status = "completed_clarification_required"
-    elif (current_status in ("output_validated", "evaluated", "completed")) and not has_error:
+    elif (current_status in ("output_validated", "evaluated", "completed", "refinement_complete", "refining", "refinement_evaluated", "refinement_analyzed")) and not has_error:
         final_status = "completed"
     else:
         final_status = "failed"
 
-    return {
+    # Resolve final selected artifact and evaluation
+    final_output = state.get("best_output") or state.get("generated_output")
+    final_eval = state.get("best_evaluation") or state.get("evaluation_result")
+
+    # Build RefinementMetadata
+    attempts = state.get("recovery_attempts", 0)
+    max_attempts = state.get("max_recovery_attempts", getattr(settings, "refinement_max_attempts", 2))
+    initial_eval = state.get("initial_evaluation") or state.get("evaluation_result") or {}
+
+    init_q = initial_eval.get("quality_score") if isinstance(initial_eval, dict) else getattr(initial_eval, "quality_score", None)
+    final_q = final_eval.get("quality_score") if isinstance(final_eval, dict) else getattr(final_eval, "quality_score", None)
+    q_delta = round(final_q - init_q, 2) if (final_q is not None and init_q is not None) else None
+
+    init_t = initial_eval.get("trust_score") if isinstance(initial_eval, dict) else getattr(initial_eval, "trust_score", None)
+    final_t = final_eval.get("trust_score") if isinstance(final_eval, dict) else getattr(final_eval, "trust_score", None)
+    t_delta = round(final_t - init_t, 2) if (final_t is not None and init_t is not None) else None
+
+    ref_status = state.get("refinement_status")
+    if current_status == "needs_clarification" or (has_error and not state.get("initial_output")):
+        ref_status = RefinementStatus.SKIPPED.value
+        attempts = 0
+    elif not ref_status:
+        if attempts == 0:
+            ref_status = RefinementStatus.NOT_NEEDED.value
+        elif attempts >= max_attempts:
+            ref_status = RefinementStatus.MAX_ATTEMPTS_REACHED.value
+        else:
+            ref_status = RefinementStatus.IMPROVED.value
+
+    peer_review_result = state.get("peer_review_result")
+    reviewer_id = None
+    if isinstance(peer_review_result, dict):
+        reviewer_id = peer_review_result.get("reviewer_persona_id")
+
+    peer_lat = state.get("peer_review_latency_ms")
+    ref_lat = state.get("refinement_generation_latency_ms")
+    total_ref_lat = (peer_lat or 0) + (ref_lat or 0) if (peer_lat is not None or ref_lat is not None) else None
+
+    refinement_metadata = RefinementMetadata(
+        refinement_triggered=(attempts > 0),
+        recovery_attempts=attempts,
+        max_recovery_attempts=max_attempts,
+        initial_quality_score=init_q,
+        final_quality_score=final_q,
+        quality_delta=q_delta,
+        initial_trust_score=init_t,
+        final_trust_score=final_t,
+        trust_delta=t_delta,
+        peer_review_conducted=bool(peer_review_result),
+        reviewer_persona_id=reviewer_id,
+        refinement_status=ref_status,
+        improvement_history=state.get("improvement_history") or [],
+        best_output_selected=state.get("best_output_selected", "initial"),
+        initial_generation_latency_ms=state.get("initial_generation_latency_ms"),
+        peer_review_latency_ms=peer_lat,
+        refinement_generation_latency_ms=ref_lat,
+        evaluation_latency_ms=state.get("evaluation_latency_ms"),
+        total_refinement_latency_ms=total_ref_lat,
+        model_call_count=state.get("model_call_count", 1 if final_output else 0),
+        reviewer_call_count=state.get("reviewer_call_count", 0),
+    )
+
+    result = {
+        "generated_output": final_output,
+        "evaluation_result": final_eval,
         "completed_at": time.time(),
         "latency_ms": elapsed_ms,
         "execution_status": final_status,
+        "refinement_metadata": refinement_metadata.model_dump(),
     }
+
+    if isinstance(final_eval, dict):
+        if "quality_score" in final_eval:
+            result["quality_score"] = final_eval["quality_score"]
+        if "reliability_score" in final_eval:
+            result["reliability_score"] = final_eval["reliability_score"]
+        if "trust_score" in final_eval:
+            result["trust_score"] = final_eval["trust_score"]
+        if "trust_breakdown" in final_eval:
+            result["trust_breakdown"] = final_eval["trust_breakdown"]
+
+    return result
+
+
+# ============================================================================
+# Phase 5: Autonomous Refinement & Specialist Collaboration Nodes
+# ============================================================================
+
+def refinement_controller_node(
+    state: OrchestrationState,
+    refinement_engine: Optional[Any] = None,
+    engine_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 5 Node: Refinement Controller
+    Evaluates current quality, determines whether to trigger recovery or peer review,
+    and initializes tracking structures.
+    """
+    from backend.refinement.engine import RefinementEngine
+
+    active_engine = refinement_engine if refinement_engine is not None else engine_override
+    if active_engine is None:
+        active_engine = RefinementEngine()
+
+    # Initialize baseline artifact and evaluation on first arrival
+    initial_output = state.get("initial_output") or state.get("generated_output")
+    best_output = state.get("best_output") or initial_output
+    initial_eval = state.get("initial_evaluation") or state.get("evaluation_result")
+    best_eval = state.get("best_evaluation") or initial_eval
+    current_attempts = state.get("recovery_attempts", 0)
+
+    state_for_eval = {
+        **state,
+        "initial_output": initial_output,
+        "best_output": best_output,
+        "initial_evaluation": initial_eval,
+        "best_evaluation": best_eval,
+        "recovery_attempts": current_attempts,
+    }
+
+    decision = active_engine.decide_refinement(state_for_eval)
+
+    if decision.should_refine:
+        return {
+            "initial_output": initial_output,
+            "best_output": best_output,
+            "initial_evaluation": initial_eval,
+            "best_evaluation": best_eval,
+            "recovery_attempts": decision.attempt_number,
+            "refinement_decision": decision.model_dump(),
+            "execution_status": "refining",
+        }
+    else:
+        ref_status = state.get("refinement_status")
+        if not ref_status:
+            if current_attempts == 0:
+                ref_status = "not_needed"
+            elif current_attempts >= decision.max_attempts:
+                ref_status = "max_attempts_reached"
+            else:
+                ref_status = "improved"
+
+        return {
+            "initial_output": initial_output,
+            "best_output": best_output,
+            "initial_evaluation": initial_eval,
+            "best_evaluation": best_eval,
+            "refinement_decision": decision.model_dump(),
+            "refinement_status": ref_status,
+            "execution_status": "refinement_complete",
+        }
+
+
+def peer_review_node(
+    state: OrchestrationState,
+    refinement_engine: Optional[Any] = None,
+    engine_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 5 Node: Specialist Peer Review
+    Invokes the assigned peer reviewer specialist to provide structured critique.
+    """
+    from backend.refinement.engine import RefinementEngine
+    from backend.refinement.schemas import CriterionFeedback
+
+    active_engine = refinement_engine if refinement_engine is not None else engine_override
+    if active_engine is None:
+        active_engine = RefinementEngine()
+
+    decision_data = state.get("refinement_decision") or {}
+    peer_reviewer_id = decision_data.get("peer_reviewer_id")
+    candidate_output = state.get("best_output") or state.get("generated_output") or ""
+    original_prompt = state.get("original_prompt") or ""
+
+    weak_criteria: List[CriterionFeedback] = []
+    for item in decision_data.get("weak_criteria", []):
+        if isinstance(item, dict):
+            weak_criteria.append(CriterionFeedback(**item))
+        elif isinstance(item, CriterionFeedback):
+            weak_criteria.append(item)
+
+    if not peer_reviewer_id:
+        return {"peer_review_result": None}
+
+    try:
+        t0 = time.perf_counter()
+        review_result = active_engine.conduct_peer_review(
+            reviewer_persona_id=peer_reviewer_id,
+            original_prompt=original_prompt,
+            candidate_output=candidate_output,
+            weak_criteria=weak_criteria,
+        )
+        duration_ms = int((time.perf_counter() - t0) * 1000)
+        call_inc = 1 if getattr(review_result, "review_method", "llm") == "llm" else 0
+        return {
+            "peer_review_result": review_result.model_dump(),
+            "peer_review_latency_ms": (state.get("peer_review_latency_ms") or 0) + duration_ms,
+            "reviewer_call_count": (state.get("reviewer_call_count") or 0) + 1,
+            "model_call_count": (state.get("model_call_count") or 1) + call_inc,
+        }
+    except Exception as e:
+        logger.warning(f"Error executing peer review node: {e}")
+        return {
+            "peer_review_result": {
+                "reviewer_persona_id": peer_reviewer_id,
+                "reviewer_persona_name": "Peer Reviewer",
+                "reviewer_discipline": "general",
+                "strengths": ["Original creative premise established."],
+                "actionable_critique": [f"Peer review error: {str(e)}"],
+                "suggested_improvements": ["Remediate rubric deficiencies directly."],
+                "status": "fallback",
+                "review_method": "heuristic",
+                "fallback_triggered": True,
+                "fallback_reason": "exception",
+            },
+            "reviewer_call_count": (state.get("reviewer_call_count") or 0) + 1,
+        }
+
+
+def synthesize_feedback_node(
+    state: OrchestrationState,
+    refinement_engine: Optional[Any] = None,
+    engine_override: Optional[Any] = None,
+    registry=None,
+) -> Dict[str, Any]:
+    """
+    Phase 5 Node: Synthesize Feedback & Prepare Refinement Prompt
+    Consolidates rubric gaps and peer review feedback into directives for the author persona.
+    """
+    from backend.refinement.engine import RefinementEngine
+    from backend.refinement.schemas import CriterionFeedback, PeerReviewResult
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    active_engine = refinement_engine if refinement_engine is not None else engine_override
+    if active_engine is None:
+        active_engine = RefinementEngine()
+
+    active_registry = registry or get_registry()
+    persona_id = state.get("selected_persona_id")
+    persona = active_registry.get_persona(persona_id) if persona_id else None
+
+    decision_data = state.get("refinement_decision") or {}
+    weak_criteria: List[CriterionFeedback] = [
+        CriterionFeedback(**item) if isinstance(item, dict) else item
+        for item in decision_data.get("weak_criteria", [])
+    ]
+
+    peer_data = state.get("peer_review_result")
+    peer_review: Optional[PeerReviewResult] = None
+    if peer_data and isinstance(peer_data, dict):
+        peer_review = PeerReviewResult(**peer_data)
+
+    synthesized_text = active_engine.synthesize_feedback(
+        weak_criteria=weak_criteria,
+        peer_review=peer_review,
+    )
+
+    original_prompt = state.get("original_prompt", "")
+    previous_draft = state.get("best_output") or state.get("generated_output") or ""
+    persona_name = persona.display_name if persona else "Specialist"
+
+    refinement_prompt = active_engine.feedback_builder.build_refinement_prompt(
+        original_prompt=original_prompt,
+        previous_output=previous_draft,
+        weak_criteria=weak_criteria,
+        persona_name=persona_name,
+        peer_review=peer_review,
+    )
+
+    system_prompt = persona.format_system_prompt() if persona else "You are an expert creative specialist."
+    messages = [
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=refinement_prompt),
+    ]
+
+    return {
+        "refinement_feedback": synthesized_text,
+        "model_input": messages,
+        "execution_status": "refining_prompt_prepared",
+    }
+
+
+def refine_output_node(
+    state: OrchestrationState,
+    model: Optional[Any] = None,
+    model_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 5 Node: Execute Refinement Generation
+    Invokes the injected model with the synthesized refinement instructions.
+    Defensive against provider failures: previous output is never destroyed.
+    """
+    active_model = model if model is not None else model_override
+    model_input = state.get("model_input")
+
+    if active_model is None:
+        logger.error("refine_output_node called without an injected model instance.")
+        return {
+            "current_output": None,
+            "execution_status": "refinement_execution_failed",
+            "execution_error": "No model injected for refinement generation.",
+        }
+
+    try:
+        t0 = time.perf_counter()
+        response = active_model.invoke(model_input)
+        duration_ms = int((time.perf_counter() - t0) * 1000)
+
+        raw_content = getattr(response, "content", response)
+        if isinstance(raw_content, str):
+            reply_text = raw_content
+        elif isinstance(raw_content, list):
+            reply_text = "".join(
+                block.get("text", "") if isinstance(block, dict) else str(block)
+                for block in raw_content
+            )
+        else:
+            reply_text = str(raw_content)
+
+        return {
+            "current_output": reply_text,
+            "generated_output": reply_text,
+            "refinement_generation_latency_ms": (state.get("refinement_generation_latency_ms") or 0) + duration_ms,
+            "model_call_count": (state.get("model_call_count") or 1) + 1,
+            "execution_status": "refinement_executed",
+        }
+    except Exception as e:
+        logger.error(f"Error during refinement generation: {e}")
+        return {
+            "current_output": None,
+            "execution_status": "refinement_execution_failed",
+            "execution_error": f"Refinement model provider error: {str(e)}",
+        }
+
+
+def evaluate_refinement_node(
+    state: OrchestrationState,
+    evaluator_engine: Optional[Any] = None,
+    engine_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 5 Node: Re-evaluate Refined Output
+    Runs Phase 4 EvaluationEngine on the newly refined output text.
+    """
+    from backend.evaluation.engine import EvaluationEngine
+
+    candidate_output = state.get("current_output")
+    if not candidate_output or not candidate_output.strip():
+        logger.warning("evaluate_refinement_node: candidate output is empty or failed.")
+        return {
+            "current_evaluation": None,
+            "execution_status": "refinement_eval_skipped",
+        }
+
+    active_eval_engine = evaluator_engine if evaluator_engine is not None else engine_override
+    if active_eval_engine is None:
+        active_eval_engine = EvaluationEngine()
+
+    state_copy = dict(state)
+    state_copy["generated_output"] = candidate_output
+    if not state_copy.get("latency_ms") and not state_copy.get("started_at"):
+        state_copy["latency_ms"] = state.get("refinement_generation_latency_ms") or 10
+
+    try:
+        t0 = time.perf_counter()
+        eval_result = active_eval_engine.evaluate_execution(state_copy)
+        duration_ms = int((time.perf_counter() - t0) * 1000)
+
+        return {
+            "current_evaluation": eval_result.model_dump(),
+            "evaluation_latency_ms": (state.get("evaluation_latency_ms") or 0) + duration_ms,
+            "execution_status": "refinement_evaluated",
+        }
+    except Exception as e:
+        logger.error(f"Error evaluating refinement output: {e}", exc_info=True)
+        return {
+            "current_evaluation": None,
+            "execution_status": "refinement_eval_failed",
+            "execution_error": f"Refinement evaluation error: {str(e)}",
+        }
+
+
+def improvement_analyzer_node(
+    state: OrchestrationState,
+    refinement_engine: Optional[Any] = None,
+    engine_override: Optional[Any] = None,
+) -> Dict[str, Any]:
+    """
+    Phase 5 Node: Improvement Analyzer & Best-Output Selection
+    Compares candidate evaluation against previous best, enforces deterministic selection,
+    and updates telemetry history.
+    """
+    from backend.refinement.engine import RefinementEngine
+    from backend.refinement.schemas import ImprovementRecord, RefinementStatus
+
+    active_engine = refinement_engine if refinement_engine is not None else engine_override
+    if active_engine is None:
+        active_engine = RefinementEngine()
+
+    prev_best_output = state.get("best_output") or state.get("initial_output") or state.get("generated_output") or ""
+    prev_best_eval = state.get("best_evaluation") or state.get("initial_evaluation") or state.get("evaluation_result")
+    cand_output = state.get("current_output")
+    cand_eval = state.get("current_evaluation")
+    attempt_num = state.get("recovery_attempts", 1)
+    prev_label = state.get("best_output_selected", "initial")
+
+    # If candidate failed execution or evaluation, reject and revert
+    if not cand_output or not cand_eval:
+        fail_reason = "Candidate refinement failed generation or evaluation. Reverting to previous best output."
+        imp_record = ImprovementRecord(
+            attempt_number=attempt_num,
+            selection_reason=fail_reason,
+            candidate_accepted=False,
+            is_improvement=False,
+            previous_best_score=prev_best_eval.get("quality_score") if isinstance(prev_best_eval, dict) else None,
+            new_quality_score=None,
+            rationale=fail_reason,
+        )
+        history = list(state.get("improvement_history") or [])
+        history.append(imp_record.model_dump())
+        return {
+            "best_output": prev_best_output,
+            "best_evaluation": prev_best_eval,
+            "best_output_selected": prev_label,
+            "refinement_status": RefinementStatus.REGRESSED_REVERTED.value,
+            "improvement_history": history,
+            "execution_status": "refinement_analyzed",
+        }
+
+    imp_record = active_engine.analyze_improvement(
+        previous_eval=prev_best_eval,
+        candidate_eval=cand_eval,
+        attempt_number=attempt_num,
+    )
+
+    best_out, best_ev, best_lbl, ref_st = active_engine.select_best_artifact(
+        previous_output=prev_best_output,
+        previous_eval=prev_best_eval,
+        candidate_output=cand_output,
+        candidate_eval=cand_eval,
+        improvement_record=imp_record,
+        previous_label=prev_label,
+    )
+
+    history = list(state.get("improvement_history") or [])
+    history.append(imp_record.model_dump())
+
+    res = {
+        "best_output": best_out,
+        "best_evaluation": best_ev,
+        "best_output_selected": best_lbl,
+        "refinement_status": ref_st.value if hasattr(ref_st, "value") else str(ref_st),
+        "improvement_history": history,
+        "execution_status": "refinement_analyzed",
+    }
+
+    if isinstance(best_ev, dict):
+        if "quality_score" in best_ev:
+            res["quality_score"] = best_ev["quality_score"]
+        if "reliability_score" in best_ev:
+            res["reliability_score"] = best_ev["reliability_score"]
+        if "trust_score" in best_ev:
+            res["trust_score"] = best_ev["trust_score"]
+        if "trust_breakdown" in best_ev:
+            res["trust_breakdown"] = best_ev["trust_breakdown"]
+
+    return res

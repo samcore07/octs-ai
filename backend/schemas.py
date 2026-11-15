@@ -72,6 +72,7 @@ class PromptResponse(BaseModel):
     routing_confidence: Optional[float] = Field(default=None, description="Confidence score of the routing decision.")
     execution_status: Optional[str] = Field(default=None, description="Status code of the orchestration execution.")
     evaluation: Optional[Dict[str, Any]] = Field(default=None, description="Structured evaluation payload containing independent Quality and Reliability metrics.")
+    refinement: Optional[Dict[str, Any]] = Field(default=None, description="Structured autonomous refinement and peer review metadata.")
 
 
 class HealthResponse(BaseModel):

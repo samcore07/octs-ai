@@ -44,7 +44,7 @@ class Settings(BaseSettings):
     }
 
     # Bounded execution limits
-    max_recursion_limit: int = 15
+    max_recursion_limit: int = 25
     max_recovery_attempts: int = 2
     max_prompt_length: int = 50000
 
@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     evaluation_judge_enabled: bool = False
     evaluation_timeout: float = 10.0
     evaluation_max_retries: int = 1
+
+    # Phase 5: Autonomous Refinement & Specialist Collaboration Settings
+    refinement_enabled: bool = True
+    refinement_threshold: float = 70.0
+    refinement_max_attempts: int = 2
+    peer_review_enabled: bool = True
+    peer_review_timeout: float = 10.0
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -70,6 +77,22 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             # Split comma-separated string if provided in env
             return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("refinement_max_attempts")
+    @classmethod
+    def validate_refinement_max_attempts(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("refinement_max_attempts cannot be negative.")
+        if value > 5:
+            raise ValueError("refinement_max_attempts cannot exceed maximum allowed safety limit of 5.")
+        return value
+
+    @field_validator("refinement_threshold")
+    @classmethod
+    def validate_refinement_threshold(cls, value: float) -> float:
+        if not (0.0 <= value <= 100.0):
+            raise ValueError("refinement_threshold must be between 0.0 and 100.0.")
         return value
 
     def is_langsmith_active(self) -> bool:

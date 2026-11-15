@@ -52,3 +52,28 @@ class OrchestrationState(TypedDict, total=False):
     reliability_score: Optional[float]
     trust_score: Optional[float]
     trust_breakdown: Optional[Dict[str, Any]]
+
+    # Phase 5: Autonomous Refinement & Specialist Collaboration
+    initial_output: Optional[str]
+    current_output: Optional[str]
+    best_output: Optional[str]
+    best_output_selected: Optional[str]
+    initial_evaluation: Optional[Dict[str, Any]]
+    current_evaluation: Optional[Dict[str, Any]]
+    best_evaluation: Optional[Dict[str, Any]]
+    recovery_attempts: int
+    max_recovery_attempts: int
+    peer_review_result: Optional[Dict[str, Any]]
+    refinement_feedback: Optional[str]
+    improvement_history: Optional[List[Dict[str, Any]]]
+    refinement_status: Optional[str]
+    refinement_metadata: Optional[Dict[str, Any]]
+    refinement_decision: Optional[Dict[str, Any]]
+
+    # Phase 5 Telemetry & Call Counting
+    initial_generation_latency_ms: Optional[int]
+    peer_review_latency_ms: Optional[int]
+    refinement_generation_latency_ms: Optional[int]
+    evaluation_latency_ms: Optional[int]
+    model_call_count: Optional[int]
+    reviewer_call_count: Optional[int]

@@ -133,13 +133,22 @@ def check_execution_successful(state: Dict[str, Any]) -> ReliabilityCheckResult:
     status = state.get("execution_status")
     error = state.get("execution_error")
 
-    if status in ("output_validated", "completed", "executed") and not error:
+    valid_success_statuses = (
+        "output_validated",
+        "completed",
+        "executed",
+        "refinement_executed",
+        "refining",
+        "refinement_complete",
+    )
+
+    if status in valid_success_statuses and not error:
         return ReliabilityCheckResult(
             check_id="execution_successful",
             check_name="Workflow Execution Health",
             status=CriterionStatus.PASSED,
             severity=CheckSeverity.CRITICAL,
-            explanation="Graph execution traversed all required nodes without error.",
+            explanation=f"Workflow completed successfully without unhandled node errors (status='{status}').",
         )
 
     return ReliabilityCheckResult(

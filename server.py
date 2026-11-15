@@ -58,11 +58,16 @@ app.add_middleware(
 )
 
 # Initialize Primary LLM
+model_init_kwargs = {
+    "model_provider": settings.model_provider,
+    "api_key": settings.gemini_api_key,
+}
+if "flash-lite" not in settings.model_name.lower():
+    model_init_kwargs["temperature"] = settings.model_temperature
+
 model = init_chat_model(
     settings.model_name,
-    model_provider=settings.model_provider,
-    temperature=settings.model_temperature,
-    api_key=settings.gemini_api_key,
+    **model_init_kwargs,
 )
 
 # Initialize Agent Persona Router & Orchestration Executor with Injected Dependencies

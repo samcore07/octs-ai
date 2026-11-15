@@ -550,6 +550,8 @@ async function submitTask() {
   const engineBadge = document.getElementById("engineBadge");
   const statusBadge = document.getElementById("statusBadge");
   const pipelineIndicator = document.getElementById("pipelineIndicator");
+  const refinementItem = document.getElementById("refinementItem");
+  const refinementBadge = document.getElementById("refinementBadge");
 
   const userInput = chatInput ? chatInput.value.trim() : "";
   if (!userInput) return;
@@ -616,6 +618,20 @@ async function submitTask() {
       agentBadge.textContent = formatAgentDisplayName(data.agent_used);
     }
 
+    if (refinementItem && refinementBadge) {
+      if (data.recovery_triggered && data.refinement) {
+        refinementItem.style.display = "flex";
+        const delta = data.refinement.quality_delta;
+        const attempts = data.refinement.recovery_attempts || 1;
+        const reviewer = data.refinement.reviewer_persona_id ? ` via ${formatAgentDisplayName(data.refinement.reviewer_persona_id)}` : "";
+        const deltaText = delta != null ? (delta >= 0 ? `+${delta.toFixed(1)} pts` : `${delta.toFixed(1)} pts`) : `Attempt ${attempts}`;
+        refinementBadge.textContent = `Corrected (${deltaText}${reviewer})`;
+        refinementBadge.style.color = "#60A5FA";
+      } else {
+        refinementItem.style.display = "none";
+      }
+    }
+
     if (data.needs_clarification) {
       if (consoleStatus) {
         consoleStatus.textContent = "● CLARIFICATION NEEDED";
@@ -631,6 +647,25 @@ async function submitTask() {
         pipelineIndicator.innerHTML = `
           <span class="pipeline-step">Input</span> → 
           <span class="pipeline-step active">Clarification Requested</span>
+        `;
+      }
+    } else if (data.recovery_triggered) {
+      if (consoleStatus) {
+        consoleStatus.textContent = "● REFINED & VERIFIED";
+        consoleStatus.style.color = "#60A5FA";
+        consoleStatus.style.background = "rgba(96, 165, 250, 0.15)";
+        consoleStatus.style.borderColor = "rgba(96, 165, 250, 0.3)";
+      }
+      if (statusBadge) {
+        statusBadge.textContent = "Refined / Verified";
+        statusBadge.style.color = "#60A5FA";
+      }
+      if (pipelineIndicator) {
+        pipelineIndicator.innerHTML = `
+          <span class="pipeline-step">Input</span> → 
+          <span class="pipeline-step">Draft</span> → 
+          <span class="pipeline-step">Peer Critique</span> → 
+          <span class="pipeline-step active">Autonomous Refinement ✓</span>
         `;
       }
     } else {

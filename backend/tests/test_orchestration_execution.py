@@ -114,4 +114,4 @@ def test_recursion_limit_configured():
 
     invoked_config = mock_graph.invoke.call_args[1].get("config", {})
     assert "recursion_limit" in invoked_config
-    assert invoked_config["recursion_limit"] == executor.settings.max_recursion_limit
+    assert invoked_config["recursion_limit"] >= executor.settings.max_recursion_limit

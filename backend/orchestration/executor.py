@@ -31,10 +31,12 @@ class OrchestrationExecutor:
         router: Optional[AgentRouter] = None,
         registry: Optional[AgentRegistry] = None,
         evaluation_engine: Optional[Any] = None,
+        refinement_engine: Optional[Any] = None,
         settings: Optional[Settings] = None,
         model_override: Optional[Any] = None,
         router_override: Optional[Any] = None,
         evaluation_engine_override: Optional[Any] = None,
+        refinement_engine_override: Optional[Any] = None,
         graph=None,
     ):
         self.settings = settings or get_settings()
@@ -53,11 +55,22 @@ class OrchestrationExecutor:
         else:
             self.evaluation_engine = active_engine
 
+        active_refinement = refinement_engine if refinement_engine is not None else refinement_engine_override
+        if active_refinement is None:
+            from backend.refinement.engine import RefinementEngine
+            self.refinement_engine = RefinementEngine(
+                model=self.model,
+                settings=self.settings,
+            )
+        else:
+            self.refinement_engine = active_refinement
+
         self.graph = graph or get_orchestration_graph(
             model=self.model,
             router=self.router,
             registry=self.registry,
             evaluator_engine=self.evaluation_engine,
+            refinement_engine=self.refinement_engine,
         )
 
     def run(
@@ -91,8 +104,12 @@ class OrchestrationExecutor:
             "needs_clarification": False,
         }
 
+        # Calculate safe dynamic recursion limit from configured refinement attempts
+        max_attempts = getattr(self.settings, "refinement_max_attempts", 2)
+        safe_recursion_limit = max(self.settings.max_recursion_limit, 15 + 8 * max_attempts)
+
         config = {
-            "recursion_limit": self.settings.max_recursion_limit,
+            "recursion_limit": safe_recursion_limit,
             "tags": ["octs-orchestration", clean_role or "unspecified"],
             "metadata": {
                 "request_id": request_id,
@@ -145,7 +162,9 @@ class OrchestrationExecutor:
             if "Model execution error" in err or "AI model dependency was not provided" in err:
                 raise RuntimeError(err)
 
-        reply = final_state.get("generated_output") or "No creative output was produced."
+        reply = final_state.get("best_output") or final_state.get("generated_output") or "No creative output was produced."
+        recovery_triggered = final_state.get("recovery_attempts", 0) > 0
+        refinement_metadata = final_state.get("refinement_metadata")
 
         return PromptResponse(
             reply=reply,
@@ -155,12 +174,13 @@ class OrchestrationExecutor:
             trust_breakdown=final_state.get("trust_breakdown"),
             evaluation=final_state.get("evaluation_result"),
             latency_ms=final_state.get("latency_ms"),
-            recovery_triggered=False,
+            recovery_triggered=recovery_triggered,
             model_used=final_state.get("model_name", self.settings.model_name),
             needs_clarification=final_state.get("needs_clarification", False),
             clarification_question=final_state.get("clarification_question"),
             routing_confidence=final_state.get("routing_confidence"),
             execution_status=final_state.get("execution_status"),
+            refinement=refinement_metadata,
         )
 
     def execute(self, request: PromptRequest) -> PromptResponse:
