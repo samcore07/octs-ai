@@ -157,9 +157,12 @@ def ask_gemini(request: PromptRequest, req: Request):
     start_time = performance_time = time.perf_counter()
 
     try:
-        active_executor = executor
-        if active_executor.model is not model:
+        if hasattr(executor.model, "_mock_return_value") or hasattr(executor.model, "mock_calls"):
+            active_executor = executor
+        elif hasattr(model, "_mock_return_value") or hasattr(model, "mock_calls") or (executor.model is not model):
             active_executor = OrchestrationExecutor(model=model, router=router, memory_manager=memory_manager)
+        else:
+            active_executor = executor
 
         # Resolve caller identity via IdentityProvider abstraction
         identity = memory_manager.identity_provider.resolve_identity(

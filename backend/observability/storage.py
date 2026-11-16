@@ -19,7 +19,9 @@ from backend.observability.schemas import RequestTelemetrySchema
 
 logger = logging.getLogger("octs.observability.storage")
 
-DEFAULT_TELEMETRY_DB = "sqlite:///./octs_telemetry.db"
+DEFAULT_TELEMETRY_DB = (
+    "sqlite:////tmp/octs_telemetry.db" if os.getenv("VERCEL") else "sqlite:///./octs_telemetry.db"
+)
 
 
 class TelemetryStore:

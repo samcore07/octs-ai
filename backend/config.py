@@ -4,6 +4,7 @@ Uses Pydantic Settings for strictly-typed, environment-driven configuration.
 """
 
 from functools import lru_cache
+import os
 from typing import List, Optional, Set
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -71,7 +72,7 @@ class Settings(BaseSettings):
     memory_max_retrieved: int = 10
     memory_max_context_tokens: int = 2000
     memory_relevance_threshold: float = 0.60
-    memory_database_url: str = "sqlite:///./octs_memory.db"
+    memory_database_url: str = "sqlite:////tmp/octs_memory.db" if os.getenv("VERCEL") else "sqlite:///./octs_memory.db"
     memory_extraction_timeout: float = 10.0
     memory_default_owner_id: str = "default_user"
 
