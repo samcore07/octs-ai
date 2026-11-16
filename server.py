@@ -143,7 +143,11 @@ def readiness_check(response: Response):
 @app.get("/")
 def serve_home():
     """Serves root Dashboard application."""
-    return FileResponse("index.html")
+    response = FileResponse("index.html")
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 # 3. Handle prompt execution via POST /ask (Exact Backward-Compatible Interface)
