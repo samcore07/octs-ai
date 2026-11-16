@@ -16,11 +16,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from backend.observability.events import ExecutionEvent
 from backend.observability.models import ExecutionEventORM, ObservabilityBase, RequestTelemetryORM
 from backend.observability.schemas import RequestTelemetrySchema
+from backend.supabase_client import is_supabase_configured, sync_execution_event, sync_telemetry_record
 
 logger = logging.getLogger("octs.observability.storage")
 
 DEFAULT_TELEMETRY_DB = (
-    "sqlite:////tmp/octs_telemetry.db" if os.getenv("VERCEL") else "sqlite:///./octs_telemetry.db"
+    os.getenv("SUPABASE_DB_URL")
+    or os.getenv("DATABASE_URL")
+    or ("sqlite:////tmp/octs_telemetry.db" if os.getenv("VERCEL") else "sqlite:///./octs_telemetry.db")
 )
 
 
@@ -31,16 +34,28 @@ class TelemetryStore:
     """
 
     def __init__(self, database_url: Optional[str] = None):
-        self.db_url = database_url or os.getenv("TELEMETRY_DATABASE_URL", DEFAULT_TELEMETRY_DB)
+        raw_url = database_url or os.getenv("TELEMETRY_DATABASE_URL", DEFAULT_TELEMETRY_DB)
+
+        # Normalize postgres URLs for SQLAlchemy compatibility
+        if raw_url.startswith("postgres://"):
+            self.db_url = raw_url.replace("postgres://", "postgresql://", 1)
+        else:
+            self.db_url = raw_url
 
         connect_args = {}
+        engine_kwargs = {"pool_pre_ping": True}
+
         if self.db_url.startswith("sqlite"):
             connect_args["check_same_thread"] = False
+        elif "postgresql" in self.db_url:
+            engine_kwargs["pool_size"] = 10
+            engine_kwargs["max_overflow"] = 20
+            engine_kwargs["pool_recycle"] = 300
 
         self.engine = create_engine(
             self.db_url,
             connect_args=connect_args,
-            pool_pre_ping=True,
+            **engine_kwargs
         )
         self.session_factory = sessionmaker(
             autocommit=False,
@@ -99,6 +114,14 @@ class TelemetryStore:
                     needs_clarification=telemetry.needs_clarification,
                 )
                 session.merge(orm_obj)
+
+            # Sync to Supabase Cloud if configured
+            if is_supabase_configured():
+                try:
+                    sync_telemetry_record(telemetry.model_dump())
+                except Exception as se:
+                    logger.debug(f"Optional Supabase telemetry sync skipped: {se}")
+
             return True
         except Exception as e:
             logger.error(f"Failed to record request telemetry [req_id={telemetry.request_id}]: {e}")
@@ -120,6 +143,22 @@ class TelemetryStore:
                     metadata_json=json.dumps(event.metadata, default=str),
                 )
                 session.add(orm_event)
+
+            # Sync to Supabase Cloud if configured
+            if is_supabase_configured():
+                try:
+                    sync_execution_event({
+                        "event_id": event.event_id,
+                        "request_id": event.request_id,
+                        "timestamp": event.timestamp,
+                        "event_type": event.event_name.value if hasattr(event.event_name, "value") else str(event.event_name),
+                        "component": event.component,
+                        "duration_ms": event.duration_ms,
+                        "payload": event.metadata,
+                    })
+                except Exception as se:
+                    logger.debug(f"Optional Supabase event sync skipped: {se}")
+
             return True
         except Exception as e:
             logger.error(f"Failed to record execution event [event={event.event_name}]: {e}")

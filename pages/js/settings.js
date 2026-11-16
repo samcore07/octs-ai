@@ -4,7 +4,76 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   loadCurrentSettings();
+  checkSupabaseStatus();
 });
+
+async function checkSupabaseStatus() {
+  const badge = document.getElementById("supabaseStatusBadge");
+  if (!badge) return;
+
+  try {
+    const res = await fetch("/api/supabase/status");
+    if (res.ok) {
+      const data = await res.json();
+      if (data.configured) {
+        badge.textContent = "Supabase Cloud";
+        badge.style.background = "rgba(16, 185, 129, 0.15)";
+        badge.style.color = "#10B981";
+        badge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+      } else {
+        badge.textContent = "Local SQLite (Default)";
+        badge.style.background = "rgba(107, 114, 128, 0.15)";
+        badge.style.color = "var(--text-secondary)";
+        badge.style.borderColor = "var(--border)";
+      }
+    }
+  } catch (e) {
+    badge.textContent = "Offline";
+  }
+}
+
+async function testSupabaseConnection() {
+  const btn = document.getElementById("testSupabaseBtn");
+  const resultEl = document.getElementById("supabasePingResult");
+  const detailsBox = document.getElementById("supabaseDetailsBox");
+
+  if (btn) btn.disabled = true;
+  if (resultEl) resultEl.textContent = "Testing database connection...";
+
+  try {
+    const res = await fetch("/api/supabase/test", { method: "POST" });
+    const data = await res.json();
+
+    if (data.status === "connected") {
+      resultEl.textContent = `✓ Connected to Supabase Cloud (${data.latency_ms}ms)`;
+      resultEl.style.color = "var(--success)";
+    } else if (data.status === "not_configured") {
+      resultEl.textContent = "○ Local SQLite active (SUPABASE_URL and SUPABASE_KEY not in .env)";
+      resultEl.style.color = "var(--text-secondary)";
+    } else {
+      resultEl.textContent = `⚠ ${data.message || data.status}`;
+      resultEl.style.color = "var(--warning)";
+    }
+
+    if (detailsBox) {
+      detailsBox.style.display = "block";
+      detailsBox.innerHTML = `
+        <div><strong>Status:</strong> ${data.status}</div>
+        <div><strong>Storage Mode:</strong> ${data.mode}</div>
+        ${data.url ? `<div><strong>Supabase Host:</strong> ${data.url}</div>` : ""}
+        ${data.latency_ms !== null && data.latency_ms !== undefined ? `<div><strong>Latency:</strong> ${data.latency_ms}ms</div>` : ""}
+        ${data.tables && Object.keys(data.tables).length ? `<div><strong>Tables Verified:</strong> ${JSON.stringify(data.tables)}</div>` : ""}
+      `;
+    }
+  } catch (err) {
+    if (resultEl) {
+      resultEl.textContent = `✗ Test error: ${err.message}`;
+      resultEl.style.color = "var(--danger)";
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
 
 function loadCurrentSettings() {
   const usernameInput = document.getElementById("settingsUsername");

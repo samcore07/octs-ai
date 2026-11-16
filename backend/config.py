@@ -72,9 +72,21 @@ class Settings(BaseSettings):
     memory_max_retrieved: int = 10
     memory_max_context_tokens: int = 2000
     memory_relevance_threshold: float = 0.60
-    memory_database_url: str = "sqlite:////tmp/octs_memory.db" if os.getenv("VERCEL") else "sqlite:///./octs_memory.db"
+    memory_database_url: str = (
+        os.getenv("SUPABASE_DB_URL")
+        or os.getenv("DATABASE_URL")
+        or ("sqlite:////tmp/octs_memory.db" if os.getenv("VERCEL") else "sqlite:///./octs_memory.db")
+    )
     memory_extraction_timeout: float = 10.0
     memory_default_owner_id: str = "default_user"
+
+    # Supabase Database & Cloud Storage Settings
+    supabase_url: Optional[str] = None
+    supabase_key: Optional[str] = None
+    supabase_service_role_key: Optional[str] = None
+    supabase_db_url: Optional[str] = None
+    supabase_enabled: bool = False
+    supabase_sync_enabled: bool = True
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -42,9 +42,10 @@ function initSidebar() {
 
 async function loadData() {
   try {
-    const [memRes, projRes] = await Promise.all([
+    const [memRes, projRes, sbRes] = await Promise.all([
       fetch("/api/memory?limit=100"),
       fetch("/api/memory/projects"),
+      fetch("/api/supabase/status").catch(() => null),
     ]);
 
     if (memRes.ok) {
@@ -52,6 +53,24 @@ async function loadData() {
     }
     if (projRes.ok) {
       allProjects = await projRes.json();
+    }
+
+    if (sbRes && sbRes.ok) {
+      const sbData = await sbRes.json();
+      const badge = document.getElementById("memoryDatabaseBadge");
+      if (badge) {
+        if (sbData.configured) {
+          badge.textContent = "Database: Supabase Cloud (Active)";
+          badge.style.background = "rgba(16, 185, 129, 0.15)";
+          badge.style.color = "#10B981";
+          badge.style.borderColor = "rgba(16, 185, 129, 0.3)";
+        } else {
+          badge.textContent = "Database: Local SQLite (Active)";
+          badge.style.background = "rgba(107, 114, 128, 0.15)";
+          badge.style.color = "var(--text-secondary)";
+          badge.style.borderColor = "var(--border)";
+        }
+      }
     }
 
     updateStats();

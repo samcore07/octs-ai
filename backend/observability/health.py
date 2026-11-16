@@ -18,6 +18,7 @@ from backend.observability.schemas import (
     LivenessResponse,
     ReadinessResponse,
 )
+from backend.supabase_client import is_supabase_configured, test_supabase_connection
 
 logger = logging.getLogger("octs.observability.health")
 
@@ -115,6 +116,21 @@ class HealthChecker:
                 details={"enabled": self.settings.langsmith_tracing, "active": tracing_active},
             )
         )
+
+        # 5. Supabase Cloud Database Probe
+        if is_supabase_configured():
+            t_sb = time.perf_counter()
+            sb_diag = test_supabase_connection()
+            sb_lat = round((time.perf_counter() - t_sb) * 1000, 2)
+            sb_status = HealthStatus.HEALTHY if sb_diag.get("status") == "connected" else HealthStatus.DEGRADED
+            deps.append(
+                DependencyHealth(
+                    name="supabase_cloud",
+                    status=sb_status,
+                    latency_ms=sb_lat,
+                    details=sb_diag,
+                )
+            )
 
         return DetailedHealthResponse(
             status=HealthStatus.HEALTHY if overall_healthy else HealthStatus.DEGRADED,

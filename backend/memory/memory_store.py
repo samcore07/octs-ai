@@ -23,17 +23,29 @@ class MemoryStore:
 
     def __init__(self, settings: Optional[MemorySettings] = None, database_url: Optional[str] = None):
         self.settings = settings or MemorySettings()
-        self.db_url = database_url or self.settings.memory_database_url
+        raw_url = database_url or self.settings.memory_database_url
+
+        # Normalize postgres URLs for SQLAlchemy compatibility (e.g. Supabase postgres:// -> postgresql://)
+        if raw_url.startswith("postgres://"):
+            self.db_url = raw_url.replace("postgres://", "postgresql://", 1)
+        else:
+            self.db_url = raw_url
 
         connect_args = {}
+        engine_kwargs = {"pool_pre_ping": True}
+
         if self.db_url.startswith("sqlite"):
             # Enable SQLite multi-threaded access for FastAPI async/threadpool handlers
             connect_args["check_same_thread"] = False
+        elif "postgresql" in self.db_url:
+            engine_kwargs["pool_size"] = 10
+            engine_kwargs["max_overflow"] = 20
+            engine_kwargs["pool_recycle"] = 300
 
         self.engine = create_engine(
             self.db_url,
             connect_args=connect_args,
-            pool_pre_ping=True,
+            **engine_kwargs
         )
         self.session_factory = sessionmaker(
             autocommit=False,

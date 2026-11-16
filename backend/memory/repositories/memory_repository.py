@@ -24,6 +24,13 @@ from backend.memory.schemas import (
     ProjectUpdate,
     utc_now,
 )
+from backend.supabase_client import (
+    delete_memory_record,
+    delete_project_record,
+    is_supabase_configured,
+    sync_memory_record,
+    sync_project_record,
+)
 
 logger = logging.getLogger("octs.memory.repository")
 
@@ -68,7 +75,14 @@ class MemoryRepository:
             session.add(orm_obj)
             session.flush()
             logger.debug(f"Created memory record {record.memory_id} (type={record.memory_type.value})")
-            return record
+
+        if is_supabase_configured():
+            try:
+                sync_memory_record(record.model_dump())
+            except Exception as se:
+                logger.debug(f"Optional Supabase memory sync skipped: {se}")
+
+        return record
 
     def get_memory(self, memory_id: str, owner_id: Optional[str] = None) -> Optional[MemoryRecord]:
         """Retrieves a single memory record by ID with optional owner verification."""
@@ -88,6 +102,7 @@ class MemoryRepository:
         owner_id: Optional[str] = None,
     ) -> Optional[MemoryRecord]:
         """Applies selective updates to a memory record."""
+        updated_pydantic = None
         with self.store.session_scope() as session:
             query = session.query(MemoryRecordORM).filter(MemoryRecordORM.memory_id == memory_id)
             if owner_id:
@@ -109,7 +124,15 @@ class MemoryRepository:
 
             orm_obj.updated_at = utc_now()
             session.flush()
-            return self._to_pydantic_memory(orm_obj)
+            updated_pydantic = self._to_pydantic_memory(orm_obj)
+
+        if updated_pydantic and is_supabase_configured():
+            try:
+                sync_memory_record(updated_pydantic.model_dump())
+            except Exception as se:
+                logger.debug(f"Optional Supabase memory update sync skipped: {se}")
+
+        return updated_pydantic
 
     def delete_memory(
         self,
@@ -132,7 +155,14 @@ class MemoryRepository:
                 orm_obj.status = MemoryStatus.DELETED.value
                 orm_obj.updated_at = utc_now()
             session.flush()
-            return True
+
+        if is_supabase_configured():
+            try:
+                delete_memory_record(memory_id)
+            except Exception as se:
+                logger.debug(f"Optional Supabase memory delete sync skipped: {se}")
+
+        return True
 
     def archive_memory(self, memory_id: str, owner_id: Optional[str] = None) -> bool:
         """Marks a memory record as ARCHIVED."""
@@ -319,7 +349,14 @@ class MemoryRepository:
             session.add(orm_obj)
             session.flush()
             logger.info(f"Created project '{project.name}' (id={project.project_id})")
-            return project
+
+        if is_supabase_configured():
+            try:
+                sync_project_record(project.model_dump())
+            except Exception as se:
+                logger.debug(f"Optional Supabase project sync skipped: {se}")
+
+        return project
 
     def get_project(self, project_id: str, owner_id: Optional[str] = None) -> Optional[ProjectRecord]:
         """Retrieves a single project record by ID."""
@@ -348,6 +385,7 @@ class MemoryRepository:
         owner_id: Optional[str] = None,
     ) -> Optional[ProjectRecord]:
         """Applies updates to project definition."""
+        updated_pydantic = None
         with self.store.session_scope() as session:
             query = session.query(ProjectRecordORM).filter(ProjectRecordORM.project_id == project_id)
             if owner_id:
@@ -369,7 +407,15 @@ class MemoryRepository:
 
             orm_obj.updated_at = utc_now()
             session.flush()
-            return self._to_pydantic_project(orm_obj)
+            updated_pydantic = self._to_pydantic_project(orm_obj)
+
+        if updated_pydantic and is_supabase_configured():
+            try:
+                sync_project_record(updated_pydantic.model_dump())
+            except Exception as se:
+                logger.debug(f"Optional Supabase project update sync skipped: {se}")
+
+        return updated_pydantic
 
     def delete_project(self, project_id: str, owner_id: Optional[str] = None) -> bool:
         """Deactivates a project and archives associated project-scoped memories."""
@@ -396,7 +442,14 @@ class MemoryRepository:
             )
 
             session.flush()
-            return True
+
+        if is_supabase_configured():
+            try:
+                delete_project_record(project_id)
+            except Exception as se:
+                logger.debug(f"Optional Supabase project delete sync skipped: {se}")
+
+        return True
 
     # --------------------------------------------------------------------------
     # Helper Mappers

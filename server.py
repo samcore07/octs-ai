@@ -44,6 +44,11 @@ from backend.memory import (
     ProjectRecord,
     ProjectUpdate,
 )
+from backend.supabase_client import (
+    get_supabase_config,
+    is_supabase_configured,
+    test_supabase_connection,
+)
 
 # Load validated configuration
 settings = get_settings()
@@ -119,6 +124,8 @@ def health_check():
         "model_provider": settings.model_provider,
         "model_name": settings.model_name,
         "langsmith_tracing": settings.is_langsmith_active(),
+        "database_provider": "supabase_cloud" if is_supabase_configured() else "sqlite_local",
+        "supabase_configured": is_supabase_configured(),
         "uptime_seconds": detailed.uptime_seconds,
         "dependencies": [d.model_dump() for d in detailed.dependencies],
     }
@@ -137,6 +144,27 @@ def readiness_check(response: Response):
     if readiness.status != "ready":
         response.status_code = 503
     return readiness
+
+
+# Supabase Cloud Database Status & Diagnostic Probes
+@app.get("/api/supabase/status")
+def supabase_status():
+    """Returns current Supabase configuration and connectivity mode."""
+    cfg = get_supabase_config()
+    is_cfg = is_supabase_configured()
+    return {
+        "configured": is_cfg,
+        "mode": "supabase_cloud" if is_cfg else "sqlite_local",
+        "url": cfg["url"],
+        "has_direct_postgres": bool(cfg["db_url"]),
+        "has_rest_api": bool(cfg["url"] and cfg["key"]),
+    }
+
+
+@app.post("/api/supabase/test")
+def supabase_test():
+    """Executes a live ping test to Supabase."""
+    return test_supabase_connection()
 
 
 # 2. Serve index.html when visiting root
