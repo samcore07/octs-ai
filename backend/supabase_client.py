@@ -23,6 +23,9 @@ _client_initialized = False
 
 def get_supabase_config() -> Dict[str, Optional[str]]:
     """Retrieves Supabase connection credentials from environment or application config."""
+    from dotenv import load_dotenv
+    load_dotenv(override=False)
+
     url = (
         os.getenv("SUPABASE_URL")
         or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
