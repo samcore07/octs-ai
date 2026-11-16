@@ -39,8 +39,10 @@ def clean_supabase_state(monkeypatch):
 def test_supabase_unconfigured_defaults(monkeypatch):
     """When no Supabase env variables are provided, should report not configured."""
     monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("NEXT_PUBLIC_SUPABASE_URL", raising=False)
     monkeypatch.delenv("SUPABASE_KEY", raising=False)
     monkeypatch.delenv("SUPABASE_ANON_KEY", raising=False)
+    monkeypatch.delenv("NEXT_PUBLIC_SUPABASE_ANON_KEY", raising=False)
     monkeypatch.delenv("SUPABASE_SERVICE_ROLE_KEY", raising=False)
     monkeypatch.delenv("SUPABASE_DB_URL", raising=False)
     monkeypatch.delenv("DATABASE_URL", raising=False)

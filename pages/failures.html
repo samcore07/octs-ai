@@ -156,17 +156,17 @@
                 <div class="stats-metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Detected Context Gaps</div>
-                        <div class="metric-value" style="color: var(--warning);">4</div>
-                        <div class="metric-subnote">All 4 recovered automatically</div>
+                        <div class="metric-value" id="failRecoveriesCount" style="color: var(--warning);">0</div>
+                        <div class="metric-subnote" id="failRecoveriesSubnote">Recovered automatically</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Self-Correction Rate</div>
-                        <div class="metric-value" style="color: var(--success);">100%</div>
-                        <div class="metric-subnote">4/4 loops successful</div>
+                        <div class="metric-value" id="failCorrectionRate" style="color: var(--success);">100%</div>
+                        <div class="metric-subnote">Peer critique loops</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Unhandled Halts</div>
-                        <div class="metric-value">0</div>
+                        <div class="metric-value" id="failUnhandledHalts">0</div>
                         <div class="metric-subnote">Zero user interruptions</div>
                     </div>
                 </div>
@@ -176,30 +176,8 @@
                         <span>Autonomous Recovery Audit Log</span>
                         <span>Real-Time Stream</span>
                     </div>
-                    <div class="log-item">
-                        <span class="log-time">14:22:04</span>
-                        <span class="log-tag">RECOVERED</span>
-                        <div class="log-content">
-                            <strong>Context Gap in Protagonist Motive (Writers):</strong>
-                            <div class="log-recovery-desc">Narrative agent flagged that character's decision in Act 2 was unearned by backstory. Triggered internal continuity loop to supply missing motivation anchor without halting draft.</div>
-                        </div>
-                    </div>
-                    <div class="log-item">
-                        <span class="log-time">11:15:39</span>
-                        <span class="log-tag">RECOVERED</span>
-                        <div class="log-content">
-                            <strong>Syllable Stress Collision (Musicians):</strong>
-                            <div class="log-recovery-desc">Lyric engine detected unnatural metric accent on bar 4 beat 2. Re-ran meter polish loop to substitute iambic phrasing while preserving rhyme scheme.</div>
-                        </div>
-                    </div>
-                    <div class="log-item">
-                        <span class="log-time">09:41:18</span>
-                        <span class="log-tag">RECOVERED</span>
-                        <div class="log-content">
-                            <strong>Contrast Ratio Deviation (Designers):</strong>
-                            <div class="log-recovery-desc">Visual system auditor caught a 3.8:1 text contrast ratio on white surface. Autonomously adjusted token luminance to achieve WCAG AAA compliance (7.2:1).</div>
-                        </div>
-                    </div>
+                    <div id="recoveryLogContainer"></div>
+                </div>
                 </div>
             </div>
         </main>

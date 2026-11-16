@@ -156,23 +156,23 @@
                 <div class="stats-metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Harness TrustScore</div>
-                        <div class="metric-value" style="color: var(--accent);">98.9%</div>
-                        <div class="metric-subnote">Peer-grade craft index</div>
+                        <div class="metric-value" id="succTrustScore" style="color: var(--accent);">--</div>
+                        <div class="metric-subnote" id="succTrustSubnote">Automated craft index</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">Quality Score</div>
-                        <div class="metric-value">4.92<span style="font-size: 16px; color: var(--text-muted);">/5.0</span></div>
-                        <div class="metric-subnote">Zero hallucinations</div>
+                        <div class="metric-value" id="succQualityScore">--<span style="font-size: 14px; color: var(--text-muted);">/100</span></div>
+                        <div class="metric-subnote">Rubric evaluation</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">Format Adherence</div>
-                        <div class="metric-value">99.4%</div>
-                        <div class="metric-subnote">Exact constraint match</div>
+                        <div class="metric-label">Reliability Score</div>
+                        <div class="metric-value" id="succReliabilityScore">--</div>
+                        <div class="metric-subnote">Constraint adherence</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-label">First-Pass Acceptance</div>
-                        <div class="metric-value">91.2%</div>
-                        <div class="metric-subnote">Minimal revision loops</div>
+                        <div class="metric-value" id="succAcceptanceRate">--</div>
+                        <div class="metric-subnote" id="succRefineSubnote">Autonomous refinement rate</div>
                     </div>
                 </div>
 

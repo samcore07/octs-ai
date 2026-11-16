@@ -160,6 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initChatExecution();
   initThemeToggle();
   initProjectSelector();
+  renderCreativeHistory();
   
   // If user previously selected a role, render that workspace immediately
   if (currentRole && ROLES_DATA[currentRole]) {
@@ -419,15 +420,15 @@ function renderRoleWorkspace(roleKey) {
   // Render Suggested Creative Directives (Interactive Cards)
   const promptsGrid = document.getElementById("suggestedPromptsGrid");
   if (promptsGrid && data.prompts) {
-    promptsGrid.innerHTML = data.prompts.map(item => {
+    promptsGrid.innerHTML = data.prompts.map((item, idx) => {
       const promptText = typeof item === "string" ? item : item.prompt;
       const title = typeof item === "string" ? item : (item.title || "Directive");
       const category = typeof item === "string" ? data.title.split(" ")[0] : (item.category || "Creative");
       return `
-        <div class="directive-card" onclick="insertPrompt(${JSON.stringify(promptText)}, this)">
+        <div class="directive-card" data-idx="${idx}">
           <div class="directive-card-top">
             <span class="directive-tag">${category}</span>
-            <button type="button" class="directive-run-btn" title="Run directive immediately" onclick="event.stopPropagation(); runDirective(${JSON.stringify(promptText)})">
+            <button type="button" class="directive-run-btn" title="Run directive immediately">
               <span>Run</span>
               <span class="run-icon">▶</span>
             </button>
@@ -437,6 +438,24 @@ function renderRoleWorkspace(roleKey) {
         </div>
       `;
     }).join("");
+
+    // Attach event listeners directly (safe from HTML attribute quote truncation)
+    promptsGrid.querySelectorAll(".directive-card").forEach((card, idx) => {
+      const item = data.prompts[idx];
+      const promptText = typeof item === "string" ? item : item.prompt;
+
+      card.addEventListener("click", () => {
+        insertPrompt(promptText, card);
+      });
+
+      const runBtn = card.querySelector(".directive-run-btn");
+      if (runBtn) {
+        runBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          runDirective(promptText);
+        });
+      }
+    });
   }
 
   // Update Placeholder in Chatbox
@@ -481,6 +500,138 @@ function clearPromptInput() {
     chatInput.value = "";
     chatInput.focus();
   }
+}
+
+// ============================================================================
+// Creative History & Answer Archive System
+// ============================================================================
+
+function saveToCreativeHistory(prompt, reply, metadata = {}) {
+  try {
+    const raw = localStorage.getItem("octs_creative_history");
+    const history = raw ? JSON.parse(raw) : [];
+
+    const item = {
+      id: "req_" + Date.now(),
+      timestamp: new Date().toISOString(),
+      prompt: prompt,
+      reply: reply,
+      role: currentRole || "writers",
+      agent: metadata.agent || "Auto-Routed Lead",
+      latency_ms: metadata.latency_ms || null,
+      model: metadata.model || "Gemini 3.5 Flash"
+    };
+
+    history.unshift(item);
+    if (history.length > 40) history.pop();
+
+    localStorage.setItem("octs_creative_history", JSON.stringify(history));
+    renderCreativeHistory();
+  } catch (e) {
+    console.error("Failed to save session history:", e);
+  }
+}
+
+function renderCreativeHistory() {
+  const container = document.getElementById("historyListGrid");
+  const countBadge = document.getElementById("historyCountBadge");
+  if (!container) return;
+
+  try {
+    const raw = localStorage.getItem("octs_creative_history");
+    const history = raw ? JSON.parse(raw) : [];
+
+    if (countBadge) {
+      countBadge.textContent = `${history.length} Saved`;
+    }
+
+    if (!history.length) {
+      container.innerHTML = `<div class="empty-history-hint">Executed requests and generated responses are saved and archived here for quick re-use.</div>`;
+      return;
+    }
+
+    container.innerHTML = history.map(item => {
+      const timeStr = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const agentName = formatAgentDisplayName(item.agent);
+      return `
+        <div class="history-item-card" data-id="${item.id}">
+          <div class="history-item-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="specialist-pill" style="font-size: 10px; padding: 1px 6px;">${agentName}</span>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">${timeStr}</span>
+            </div>
+            ${item.latency_ms ? `<span style="font-family: var(--font-mono); font-size: 10px; color: var(--text-muted);">${item.latency_ms}ms</span>` : ""}
+          </div>
+          <div class="history-item-prompt">${escapeHtml(item.prompt)}</div>
+          <div class="history-item-preview">${escapeHtml(item.reply)}</div>
+          <div class="history-item-actions">
+            <button type="button" class="restore-btn" onclick="restoreHistoryItem('${item.id}')">
+              <span>Restore to Canvas</span>
+              <span>↳</span>
+            </button>
+            <button type="button" class="copy-btn" onclick="copyHistoricalReply('${item.id}')" style="padding: 3px 8px; font-size: 10px;">
+              <span>Copy Output</span>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  } catch (e) {
+    console.error("Failed to render creative history:", e);
+  }
+}
+
+function restoreHistoryItem(id) {
+  try {
+    const raw = localStorage.getItem("octs_creative_history");
+    const history = raw ? JSON.parse(raw) : [];
+    const found = history.find(item => item.id === id);
+    if (!found) return;
+
+    const chatInput = document.getElementById("chatInput");
+    const outputDiv = document.getElementById("output");
+    const agentBadge = document.getElementById("agentBadge");
+    const latencyBadge = document.getElementById("latencyBadge");
+
+    if (chatInput) chatInput.value = found.prompt;
+    if (outputDiv) {
+      outputDiv.classList.remove("empty-state");
+      outputDiv.innerHTML = renderMarkdown(found.reply);
+      outputDiv.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    if (agentBadge) agentBadge.textContent = formatAgentDisplayName(found.agent);
+    if (latencyBadge && found.latency_ms) latencyBadge.textContent = `${found.latency_ms}ms`;
+  } catch (e) {
+    console.error("Failed to restore history item:", e);
+  }
+}
+
+function copyHistoricalReply(id) {
+  try {
+    const raw = localStorage.getItem("octs_creative_history");
+    const history = raw ? JSON.parse(raw) : [];
+    const found = history.find(item => item.id === id);
+    if (found && found.reply) {
+      navigator.clipboard.writeText(found.reply);
+    }
+  } catch (e) {
+    console.error("Failed to copy history item:", e);
+  }
+}
+
+function clearCreativeHistory() {
+  localStorage.removeItem("octs_creative_history");
+  renderCreativeHistory();
+}
+
+function escapeHtml(text) {
+  if (!text) return "";
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // 5. Backend Execution & Copy Logic
@@ -721,6 +872,13 @@ async function submitTask() {
         `;
       }
     }
+
+    // Persist request and answer to session history archive
+    saveToCreativeHistory(userInput, replyText, {
+      agent: data.agent_used,
+      latency_ms: data.latency_ms || elapsedMs,
+      model: data.model_used
+    });
 
   } catch (error) {
     console.error("Execution error:", error);

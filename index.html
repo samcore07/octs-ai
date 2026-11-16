@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.0">
+    <link rel="stylesheet" href="style.css?v=2.1">
 </head>
 <body>
     <div class="app-layout">
@@ -410,12 +410,26 @@
                         <!-- The Output Container -->
                         <div id="output" class="console-content empty-state">Creative output will appear here after task execution...</div>
                     </div>
+
+                    <!-- Session History & Archived Answers Panel -->
+                    <div class="session-history-section" id="sessionHistorySection">
+                        <div class="section-heading-bar">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="section-title">Session History & Answers</span>
+                                <span class="nav-badge" id="historyCountBadge">0 Saved</span>
+                            </div>
+                            <button class="clear-btn" id="clearHistoryBtn" onclick="clearCreativeHistory()" style="padding: 4px 10px; font-size: 11px;">Clear History</button>
+                        </div>
+                        <div class="history-list-grid" id="historyListGrid">
+                            <div class="empty-history-hint">Executed requests and generated responses are saved and archived here for quick re-use.</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <!-- Core Application Logic -->
-    <script src="script.js?v=2.0" defer></script>
+    <script src="script.js?v=2.1" defer></script>
 </body>
 </html>

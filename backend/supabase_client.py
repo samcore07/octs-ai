@@ -15,6 +15,11 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
+
+# Load once at module import so tests can monkeypatch os.environ cleanly
+load_dotenv(override=False)
+
 logger = logging.getLogger("octs.supabase")
 
 _supabase_client = None
@@ -23,9 +28,6 @@ _client_initialized = False
 
 def get_supabase_config() -> Dict[str, Optional[str]]:
     """Retrieves Supabase connection credentials from environment or application config."""
-    from dotenv import load_dotenv
-    load_dotenv(override=False)
-
     url = (
         os.getenv("SUPABASE_URL")
         or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
