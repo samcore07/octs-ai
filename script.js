@@ -10,7 +10,7 @@ const ROLES_DATA = {
     title: "Writers & Storytellers",
     tagline: "Ideas, storytelling, research and writing assistance.",
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>`,
-    description: "Your AI harness coordinates narrative architects, lore continuity auditors, prose refiners, and fact scouts to unblock your writing and elevate story craft.",
+    description: "Multi-agent coordination for narrative arcs, lore continuity, dialogue tension, and research auditing.",
     agents: [
       { name: "Narrative Architect", role: "3-Act Structure & Pacing", model: "Gemini 3.5 Flash", status: "Active" },
       { name: "Lore & Continuity Keeper", role: "Canon & World Consistency", model: "Gemini 3.5 Flash", status: "Armed" },
@@ -18,26 +18,25 @@ const ROLES_DATA = {
       { name: "Research Scout", role: "Domain & Fact Auditing", model: "Gemini 3.5 Flash", status: "Standby" }
     ],
     prompts: [
-      "Untangle a plot bottleneck where the protagonist's motivation conflicts with Chapter 4.",
-      "Audit dialogue consistency between two estranged siblings in a high-stakes confrontation.",
-      "Build a 3-act tension arc with rising stakes for a psychological thriller.",
-      "Generate sensory details and atmosphere for an abandoned retro-futuristic research lab."
-    ],
-    toolkit: [
       {
-        title: "Writer's Block Breaker",
-        desc: "Break through stagnation by exploring 3 unconventional plot twists and pivot scenes.",
-        prompt: "I am facing writer's block at a transition point in my story. Generate 3 compelling, unexpected ways to push the narrative forward with high emotional stakes."
+        category: "Structure & Conflict",
+        title: "Resolve Plot Bottleneck",
+        prompt: "Untangle a plot bottleneck where the protagonist's motivation conflicts with Chapter 4."
       },
       {
-        title: "Dialogue Doctor",
-        desc: "Sharpen character exchanges to remove exposition and amplify subtext.",
-        prompt: "Sharpen this dialogue exchange to remove flat exposition, amplify subtext, and ensure distinct character voices."
+        category: "Dialogue & Subtext",
+        title: "Sharpen Dialogue Tension",
+        prompt: "Audit dialogue consistency between two estranged siblings in a high-stakes confrontation."
       },
       {
-        title: "World & Lore Continuity Audit",
-        desc: "Scan narrative elements for contradictions, timeline inconsistencies, and magic system gaps.",
-        prompt: "Audit this scene outline for lore consistency, timeline paradoxes, and unearned character choices."
+        category: "Pacing & Stakes",
+        title: "3-Act Tension Arc",
+        prompt: "Build a 3-act tension arc with rising stakes for a psychological thriller."
+      },
+      {
+        category: "Atmosphere & World",
+        title: "Sensory Environment Spec",
+        prompt: "Generate sensory details and atmosphere for an abandoned retro-futuristic research lab."
       }
     ]
   },
@@ -46,7 +45,7 @@ const ROLES_DATA = {
     title: "Musicians & Singers",
     tagline: "Music creation, songwriting and creative experimentation.",
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`,
-    description: "Your AI harness coordinates lyric meter engines, harmonic arrangers, vocal hook designers, and sonic palette curators to craft captivating songs and break creative blocks.",
+    description: "Multi-agent coordination for lyric cadence, harmonic substitutions, arrangement dynamics, and sonic curation.",
     agents: [
       { name: "Lyricist & Meter Engine", role: "Rhyme Cadence & Syllabic Stress", model: "Gemini 3.5 Flash", status: "Active" },
       { name: "Harmonic Arranger", role: "Chord Progressions & Modal Shifts", model: "Gemini 3.5 Flash", status: "Armed" },
@@ -54,26 +53,25 @@ const ROLES_DATA = {
       { name: "Sonic Palette Curator", role: "Genre Cross-Pollination", model: "Gemini 3.5 Flash", status: "Standby" }
     ],
     prompts: [
-      "Write a punchy neo-soul chorus with internal rhymes and unexpected modal chords.",
-      "Resolve a chord progression from Dm7 to G7 that feels fresh, poignant, and melancholic.",
-      "Create an arrangement timeline for an indie electronic track with tension drops.",
-      "Brainstorm lyrical metaphors for the feeling of sudden temporal disorientation."
-    ],
-    toolkit: [
       {
-        title: "Chorus Hook Workshop",
-        desc: "Develop 3 infectious, high-contrast vocal hooks with phonetic cadence maps.",
-        prompt: "Write 3 distinct chorus hook options for an energetic indie-pop track, focusing on vowel resonance and rhythmic syncopation."
+        category: "Lyric Cadence",
+        title: "Neo-Soul Chorus Hook",
+        prompt: "Write a punchy neo-soul chorus with internal rhymes and unexpected modal chords."
       },
       {
-        title: "Modal Chord Substitution",
-        desc: "Transform predictable 4-chord progressions into sophisticated harmonic journeys.",
-        prompt: "Take a standard I-V-vi-IV progression and provide 3 jazz/neo-soul chord substitution variants with voice leading."
+        category: "Modal Harmonics",
+        title: "Fresh Progression Resolution",
+        prompt: "Resolve a chord progression from Dm7 to G7 that feels fresh, poignant, and melancholic."
       },
       {
-        title: "Bridge Breakthrough Lab",
-        desc: "Design an emotionally transcendent bridge that revitalizes the track before the final chorus.",
-        prompt: "Construct a song bridge that shifts modulation and dynamic texture to deliver an emotional peak before the final chorus."
+        category: "Track Dynamics",
+        title: "Electronic Tension Arrangement",
+        prompt: "Create an arrangement timeline for an indie electronic track with tension drops."
+      },
+      {
+        category: "Metaphor Lab",
+        title: "Temporal Disorientation Imagery",
+        prompt: "Brainstorm lyrical metaphors for the feeling of sudden temporal disorientation."
       }
     ]
   },
@@ -82,7 +80,7 @@ const ROLES_DATA = {
     title: "Content Creators",
     tagline: "Content planning, scripting, publishing and audience growth.",
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>`,
-    description: "Your AI harness coordinates viral hook architects, cross-platform transmuters, editorial cadence planners, and audience retention auditors to maximize reach and consistency.",
+    description: "Multi-agent coordination for viral opening hooks, script momentum audits, and omni-channel transmuting.",
     agents: [
       { name: "Hook & Retention Architect", role: "First 3-Second Hooks & Pacing", model: "Gemini 3.5 Flash", status: "Active" },
       { name: "Multi-Platform Transmuter", role: "Longform to Shorts/Reels/X", model: "Gemini 3.5 Flash", status: "Armed" },
@@ -90,26 +88,25 @@ const ROLES_DATA = {
       { name: "Audience Friction Auditor", role: "Drop-off Analysis & CTR Optimization", model: "Gemini 3.5 Flash", status: "Standby" }
     ],
     prompts: [
-      "Generate 5 high-retention opening hooks for a video dissecting modern architectural failures.",
-      "Transform an 8-minute technical essay into a 45-second high-energy vertical script.",
-      "Build a 4-week thematic content matrix around design engineering and creative tech.",
-      "Audit this video script outline for pacing lulls and drop-off risks around minute 2."
-    ],
-    toolkit: [
       {
-        title: "Viral Hook Matrix",
-        desc: "Test 5 hook formulas (Curiosity Gap, High-Stakes Thesis, Story Open-Loop, Counter-Intuitive Truth).",
-        prompt: "Generate 5 high-retention video opening hooks using distinct psychological formulas: Curiosity Gap, Counter-Intuitive Truth, and Story Open-Loop."
+        category: "Retention Hooks",
+        title: "5 High-Stakes Opening Hooks",
+        prompt: "Generate 5 high-retention opening hooks for a video dissecting modern architectural failures."
       },
       {
-        title: "Script Pacing & Retention Audit",
-        desc: "Audit script sections for momentum dips, dead air, and cognitive friction.",
-        prompt: "Audit this script outline for 60-second video pacing. Flag where audience attention might drop and provide tighter line edits."
+        category: "Format Transmutation",
+        title: "Longform to Vertical Script",
+        prompt: "Transform an 8-minute technical essay into a 45-second high-energy vertical script."
       },
       {
-        title: "Omni-Channel Repurposing Engine",
-        desc: "Transmute a single core concept into a LinkedIn breakdown, X thread, and 2 short video concepts.",
-        prompt: "Convert this core video concept into: 1 actionable 7-post X thread, and 2 distinct 45-second vertical script ideas."
+        category: "Editorial Matrix",
+        title: "4-Week Creative Tech Strategy",
+        prompt: "Build a 4-week thematic content matrix around design engineering and creative tech."
+      },
+      {
+        category: "Pacing Audit",
+        title: "Drop-Off & Retention Review",
+        prompt: "Audit this video script outline for pacing lulls and drop-off risks around minute 2."
       }
     ]
   },
@@ -118,7 +115,7 @@ const ROLES_DATA = {
     title: "Visual Artists & Designers",
     tagline: "Design workflows, visual ideation and creative exploration.",
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M14.31 8l5.74 9.94M9.69 8h11.48M7.38 12l5.74-9.94M9.69 16L3.95 6.06M14.31 16H2.83m13.79-4l-5.74 9.94"></path></svg>`,
-    description: "Your AI harness coordinates concept ideation engines, visual system auditors, art direction critics, and asset workflow organizers for impeccable aesthetics.",
+    description: "Multi-agent coordination for art direction briefs, Swiss design critiques, visual metaphors, and token hierarchies.",
     agents: [
       { name: "Concept Ideation Engine", role: "Metaphorical Moodboarding & Themes", model: "Gemini 3.5 Flash", status: "Active" },
       { name: "Visual System Auditor", role: "Grid Hierarchy & Typography Scales", model: "Gemini 3.5 Flash", status: "Armed" },
@@ -126,26 +123,25 @@ const ROLES_DATA = {
       { name: "Creative Asset Organizer", role: "Design Token Taxonomies", model: "Gemini 3.5 Flash", status: "Standby" }
     ],
     prompts: [
-      "Develop an art direction brief combining Swiss modernism with brutalist architecture.",
-      "Critique a brand identity system for a sustainable aerospace startup.",
-      "Generate 4 visual metaphors for 'invisible precision engineering'.",
-      "Create a palette and typography hierarchy guide for a dark-mode creative analytics app."
-    ],
-    toolkit: [
       {
-        title: "Art Direction Brief Synthesizer",
-        desc: "Generate a holistic creative direction spec including lighting, framing, palette, and typography.",
-        prompt: "Draft a comprehensive art direction brief for an editorial brand, specifying color palette (hex), typography pairings, visual metaphors, and layout rules."
+        category: "Art Direction",
+        title: "Modernism + Brutalism Direction",
+        prompt: "Develop an art direction brief combining Swiss modernism with brutalist architecture."
       },
       {
-        title: "Design Critique Simulator",
-        desc: "Get an uncompromising Swiss-style critique on layout balance, visual hierarchy, and contrast.",
-        prompt: "Act as an experienced Design Director. Provide a thorough critique on the hierarchy, white space balance, and typography rhythm of this concept."
+        category: "Identity Critique",
+        title: "Sustainable Aerospace Audit",
+        prompt: "Critique a brand identity system for a sustainable aerospace startup."
       },
       {
-        title: "Design Token & Palette Architect",
-        desc: "Generate harmonious light and dark color scales with semantic token assignments.",
-        prompt: "Create an accessible color palette featuring primary, accent, and semantic status colors with contrast ratios and token naming conventions."
+        category: "Visual Metaphors",
+        title: "Invisible Precision Concepts",
+        prompt: "Generate 4 visual metaphors for 'invisible precision engineering'."
+      },
+      {
+        category: "Design System",
+        title: "Dark Analytics Palette & Scale",
+        prompt: "Create a palette and typography hierarchy guide for a dark-mode creative analytics app."
       }
     ]
   }
@@ -335,6 +331,13 @@ function initRoleSelection() {
     });
   });
 
+  document.querySelectorAll(".domain-tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const roleKey = btn.getAttribute("data-role");
+      selectRole(roleKey);
+    });
+  });
+
   const switchRoleBtn = document.getElementById("switchRoleBtn");
   if (switchRoleBtn) {
     switchRoleBtn.addEventListener("click", switchRole);
@@ -398,48 +401,42 @@ function renderRoleWorkspace(roleKey) {
     if (topbarRoleName) topbarRoleName.textContent = data.title;
   }
 
+  // Sync Domain Selector Bar
+  document.querySelectorAll(".domain-tab-btn").forEach(btn => {
+    if (btn.getAttribute("data-role") === roleKey) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
   // Update Workspace Header
   const titleEl = document.getElementById("workspaceRoleTitle");
   const descEl = document.getElementById("workspaceRoleDesc");
-  if (titleEl) titleEl.textContent = `Welcome to your ${data.title} workspace.`;
+  if (titleEl) titleEl.textContent = data.title;
   if (descEl) descEl.textContent = data.description;
 
-  // Render Coordination Agents List
-  const agentsListEl = document.getElementById("coordinationAgentsList");
-  if (agentsListEl) {
-    agentsListEl.innerHTML = data.agents.map(ag => `
-      <div class="agent-chip" title="${ag.role} (${ag.model})">
-        <span class="dot"></span>
-        <span>${ag.name}</span>
-      </div>
-    `).join("");
-  }
-
-  // Render Suggested Prompts
+  // Render Suggested Creative Directives (Interactive Cards)
   const promptsGrid = document.getElementById("suggestedPromptsGrid");
-  if (promptsGrid) {
-    promptsGrid.innerHTML = data.prompts.map(promptText => `
-      <div class="prompt-chip" onclick="insertPrompt(${JSON.stringify(promptText)})">
-        <span class="prompt-icon">↳</span>
-        <span>${promptText}</span>
-      </div>
-    `).join("");
-  }
-
-  // Render Role-Specific Toolkit Cards
-  const toolkitGrid = document.getElementById("roleToolkitGrid");
-  if (toolkitGrid) {
-    toolkitGrid.innerHTML = data.toolkit.map(item => `
-      <div class="toolkit-card" onclick="insertAndExecute(${JSON.stringify(item.prompt)})">
-        <div class="toolkit-icon-row">
-          <div class="toolkit-icon-badge">⚡</div>
-          <span class="challenge-tag">Auto-Harness</span>
+  if (promptsGrid && data.prompts) {
+    promptsGrid.innerHTML = data.prompts.map(item => {
+      const promptText = typeof item === "string" ? item : item.prompt;
+      const title = typeof item === "string" ? item : (item.title || "Directive");
+      const category = typeof item === "string" ? data.title.split(" ")[0] : (item.category || "Creative");
+      return `
+        <div class="directive-card" onclick="insertPrompt(${JSON.stringify(promptText)}, this)">
+          <div class="directive-card-top">
+            <span class="directive-tag">${category}</span>
+            <button type="button" class="directive-run-btn" title="Run directive immediately" onclick="event.stopPropagation(); runDirective(${JSON.stringify(promptText)})">
+              <span>Run</span>
+              <span class="run-icon">▶</span>
+            </button>
+          </div>
+          <div class="directive-title">${title}</div>
+          <div class="directive-prompt-preview">${promptText}</div>
         </div>
-        <h4>${item.title}</h4>
-        <p>${item.desc}</p>
-        <span class="toolkit-action">Deploy Agent Blueprint →</span>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 
   // Update Placeholder in Chatbox
@@ -449,21 +446,33 @@ function renderRoleWorkspace(roleKey) {
   }
 }
 
-// 4. Prompt Helpers
-function insertPrompt(text) {
+// 4. Prompt Helpers & Quick Execution
+function insertPrompt(text, cardEl) {
   const chatInput = document.getElementById("chatInput");
   if (chatInput) {
     chatInput.value = text;
     chatInput.focus();
+    chatInput.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    if (cardEl) {
+      document.querySelectorAll(".directive-card").forEach(c => c.classList.remove("active-directive"));
+      cardEl.classList.add("active-directive");
+      setTimeout(() => cardEl.classList.remove("active-directive"), 1800);
+    }
+  }
+}
+
+function runDirective(text) {
+  const chatInput = document.getElementById("chatInput");
+  if (chatInput) {
+    chatInput.value = text;
+    chatInput.focus();
+    submitTask();
   }
 }
 
 function insertAndExecute(text) {
-  const chatInput = document.getElementById("chatInput");
-  if (chatInput) {
-    chatInput.value = text;
-    submitTask();
-  }
+  runDirective(text);
 }
 
 function clearPromptInput() {

@@ -286,59 +286,53 @@
                      SCREEN 2: DYNAMIC ROLE-BASED WORKSPACE
                      ----------------------------------------------------- -->
                 <div class="active-workspace-view" id="roleWorkspaceScreen">
-                    <!-- Personalized Workspace Banner -->
-                    <div class="workspace-header-card">
-                        <div class="workspace-header-main">
-                            <h2 id="workspaceRoleTitle">Welcome to your workspace.</h2>
-                            <p id="workspaceRoleDesc">
-                                Your AI harness coordinates specialized domain agents to resolve creative bottlenecks and accelerate execution.
-                            </p>
-                        </div>
-                        <div class="workspace-header-actions">
-                            <button class="switch-role-btn" id="switchRoleBtn">
-                                <span>⇄</span>
-                                <span>Change Category</span>
-                            </button>
-                        </div>
+                    <!-- Clean Domain Selector Bar -->
+                    <div class="domain-selector-bar" id="domainSelectorBar">
+                        <button class="domain-tab-btn" data-role="writers">
+                            <span class="domain-icon">✍️</span>
+                            <span class="domain-label">Writers</span>
+                        </button>
+                        <button class="domain-tab-btn" data-role="musicians">
+                            <span class="domain-icon">🎵</span>
+                            <span class="domain-label">Musicians</span>
+                        </button>
+                        <button class="domain-tab-btn" data-role="creators">
+                            <span class="domain-icon">🎬</span>
+                            <span class="domain-label">Creators</span>
+                        </button>
+                        <button class="domain-tab-btn" data-role="designers">
+                            <span class="domain-icon">🎨</span>
+                            <span class="domain-label">Designers</span>
+                        </button>
                     </div>
 
-                    <!-- Specialized Agent Coordination Ribbon -->
-                    <div class="agent-coordination-ribbon">
-                        <div class="coordination-label">
-                            <span>Coordinating Agents:</span>
-                        </div>
-                        <div class="coordination-agents-list" id="coordinationAgentsList">
-                            <!-- Populated dynamically by script.js -->
-                        </div>
-                        <span class="harness-status-pill">● Auto-Recovery Armed</span>
-                    </div>
-
-                    <!-- =================================================
-                         AI Harness Interaction Area
-                         ================================================= -->
+                    <!-- AI Harness Interaction Area -->
                     <div class="harness-interaction-panel">
                         <div class="panel-header">
                             <div class="panel-title-group">
-                                <span class="panel-title">AI Creative Harness</span>
-                                <span class="panel-subtitle-mono">/ Multi-Agent Dispatcher</span>
+                                <span class="panel-title" id="workspaceRoleTitle">Creative Studio</span>
+                                <span class="panel-subtitle-mono" id="workspaceRoleDesc">Select a directive below or enter your creative intent</span>
                             </div>
-                            <div class="panel-status-group" style="display: flex; align-items: center; gap: 12px;">
-                                <div class="project-selector-wrapper" style="display: inline-flex; align-items: center; gap: 6px; font-size: 11px;">
-                                    <label for="activeProjectSelect" style="color: var(--text-secondary); font-weight: 500;">Project:</label>
-                                    <select id="activeProjectSelect" class="project-select-dropdown" style="padding: 2px 8px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 11px;">
+                            <div class="panel-status-group">
+                                <div class="project-selector-wrapper">
+                                    <label for="activeProjectSelect">Project:</label>
+                                    <select id="activeProjectSelect" class="project-select-dropdown">
                                         <option value="">Global (No Project)</option>
                                     </select>
                                 </div>
                                 <div class="panel-status">
-                                    <span class="status-dot" style="background-color: var(--success);"></span>
+                                    <span class="status-dot"></span>
                                     <span>Context Aware</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Dynamic Suggested Prompts based on Role -->
+                        <!-- Dynamic Suggested Directives based on Role -->
                         <div class="suggested-prompts-section">
-                            <div class="suggested-label">Suggested Creative Directives:</div>
+                            <div class="suggested-header-row">
+                                <span class="suggested-label">Suggested Creative Directives</span>
+                                <span class="suggested-hint">Click card to edit • Click "Run" to execute immediately</span>
+                            </div>
                             <div class="prompt-chips-grid" id="suggestedPromptsGrid">
                                 <!-- Populated dynamically by script.js -->
                             </div>
@@ -353,13 +347,10 @@
                             ></textarea>
                         </div>
 
-                        <!-- Input Action & Pipeline Helper Bar -->
+                        <!-- Input Action Bar -->
                         <div class="input-helper-bar">
-                            <div class="pipeline-flow-indicator" id="pipelineIndicator">
-                                <span class="pipeline-step active">Input</span> → 
-                                <span class="pipeline-step">Intent</span> → 
-                                <span class="pipeline-step">Coordinating Agents</span> → 
-                                <span class="pipeline-step">Verification</span>
+                            <div class="input-tip-text">
+                                <span>Tip: Press <strong>Cmd/Ctrl + Enter</strong> to execute</span>
                             </div>
                             <div class="action-buttons-group">
                                 <button class="clear-btn" onclick="clearPromptInput()">Clear</button>
@@ -372,43 +363,35 @@
                     </div>
 
                     <!-- =================================================
-                         Dark AI Console (Execution Output Area)
+                         Creative Output Canvas (Clean Execution Area)
                          ================================================= -->
                     <div class="dark-console-box">
                         <div class="console-topbar">
                             <div class="console-title-wrap">
-                                <div class="console-terminal-dots">
-                                    <span class="term-dot" style="background-color: #EF4444;"></span>
-                                    <span class="term-dot" style="background-color: #F59E0B;"></span>
-                                    <span class="term-dot" style="background-color: #10B981;"></span>
-                                </div>
-                                <span class="console-title">Execution Console / AI Output</span>
+                                <span class="console-title">Output Canvas</span>
+                                <span class="specialist-pill" id="agentBadge">Auto-Routed</span>
                             </div>
                             <div class="console-actions">
-                                <span class="console-status-pill" id="consoleStatusPill">● Ready</span>
+                                <span class="console-status-pill" id="consoleStatusPill">Ready</span>
                                 <button class="copy-btn" id="copyBtn" onclick="copyResponse()">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                     </svg>
-                                    <span>Copy Output</span>
+                                    <span>Copy</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Telemetry Bar -->
+                        <!-- Telemetry / Metrics Bar -->
                         <div class="console-telemetry-bar">
                             <div class="telemetry-item">
                                 <span>Engine:</span>
-                                <strong id="engineBadge">Gemini 3.5 Flash Lite</strong>
+                                <strong id="engineBadge">Gemini 3.5 Flash</strong>
                             </div>
                             <div class="telemetry-item">
                                 <span>Latency:</span>
                                 <strong id="latencyBadge">--</strong>
-                            </div>
-                            <div class="telemetry-item">
-                                <span>Specialist Agent:</span>
-                                <strong id="agentBadge">Auto-Routed</strong>
                             </div>
                             <div class="telemetry-item">
                                 <span>Status:</span>
@@ -424,24 +407,8 @@
                             </div>
                         </div>
 
-                        <!-- The Output Container (Connected to server.py) -->
-                        <div id="output" class="console-content empty-state">AI Creative Harness output will appear here after task execution...</div>
-
-                        <div class="console-footer-info">
-                            <span>ORCHESTRATION ENGINE: LANGGRAPH HARNESS</span>
-                            <span>FASTAPI BACKEND CONNECTED</span>
-                        </div>
-                    </div>
-
-                    <!-- Specialized Creative Problem-Solving Toolkit -->
-                    <div class="role-toolkit-section">
-                        <div class="section-heading-bar">
-                            <span class="section-title">Domain Challenge Blueprints</span>
-                            <span class="section-tag">Direct Agent Workflows</span>
-                        </div>
-                        <div class="toolkit-cards-grid" id="roleToolkitGrid">
-                            <!-- Populated dynamically by script.js -->
-                        </div>
+                        <!-- The Output Container -->
+                        <div id="output" class="console-content empty-state">Creative output will appear here after task execution...</div>
                     </div>
                 </div>
             </div>

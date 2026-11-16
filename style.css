@@ -830,68 +830,59 @@ body {
   border-color: var(--border-hover);
 }
 
-/* Agent Coordination Ribbon */
-.agent-coordination-ribbon {
+/* Domain Selector Bar */
+.domain-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 6px;
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 20px;
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
 }
 
-.coordination-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.coordination-agents-list {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.agent-chip {
+.domain-tab-btn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background-color: var(--surface-alt);
-  border: 1px solid var(--border);
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text);
-}
-
-.agent-chip .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--success);
-}
-
-.harness-status-pill {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
   font-weight: 600;
-  text-transform: uppercase;
-  padding: 4px 10px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.domain-tab-btn:hover {
+  background-color: var(--surface-alt);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.domain-tab-btn.active {
   background-color: var(--accent-subtle);
   color: var(--accent);
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius-full);
+  border-color: var(--accent-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.domain-tab-btn .domain-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.domain-tab-btn .domain-label {
+  letter-spacing: -0.1px;
 }
 
 /* ==========================================================================
@@ -944,54 +935,126 @@ body {
   color: var(--text-secondary);
 }
 
-/* Suggested Prompts */
+/* Suggested Creative Directives */
 .suggested-prompts-section {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+.suggested-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .suggested-label {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+}
+
+.suggested-hint {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .prompt-chips-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  gap: 12px;
 }
 
-.prompt-chip {
-  background: var(--surface-alt);
+.directive-card {
+  background-color: var(--surface-alt);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
+  border-radius: var(--radius);
+  padding: 14px 16px;
   text-align: left;
-  font-size: 12px;
-  color: var(--text);
   cursor: pointer;
   transition: all var(--transition-fast);
-  line-height: 1.4;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.directive-card:hover {
+  background-color: var(--surface);
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.directive-card.active-directive {
+  border-color: var(--accent);
+  background-color: var(--accent-subtle);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.directive-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
-.prompt-chip:hover {
-  background: var(--surface);
-  border-color: var(--accent);
+.directive-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
   color: var(--accent);
-  box-shadow: var(--shadow-sm);
+  background: var(--accent-subtle);
+  border: 1px solid var(--accent-border);
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
-.prompt-chip .prompt-icon {
+.directive-run-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.directive-run-btn:hover {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--text-inverse);
+  transform: scale(1.05);
+}
+
+.directive-run-btn .run-icon {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.directive-title {
   font-size: 13px;
-  color: var(--accent);
-  flex-shrink: 0;
-  margin-top: 1px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.directive-prompt-preview {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.45;
 }
 
 /* Textarea input area */
@@ -1032,22 +1095,16 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 4px;
+  gap: 12px;
 }
 
-.pipeline-flow-indicator {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 10px;
+.input-tip-text {
+  font-size: 11px;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.pipeline-step.active {
-  color: var(--accent);
-  font-weight: 600;
+.input-tip-text strong {
+  color: var(--text-secondary);
 }
 
 .action-buttons-group {
@@ -1146,6 +1203,17 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--console-muted);
+}
+
+.specialist-pill {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  background: rgba(96, 165, 250, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(96, 165, 250, 0.3);
 }
 
 .console-actions {
@@ -1297,100 +1365,6 @@ body {
   color: var(--console-muted);
 }
 
-/* ==========================================================================
-   Role-Specific Toolkit & Challenge Cards
-   ========================================================================== */
-
-.role-toolkit-section {
-  margin-top: 32px;
-}
-
-.section-heading-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  color: var(--text);
-}
-
-.section-tag {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-}
-
-.toolkit-cards-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.toolkit-card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px;
-  transition: all var(--transition-fast);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-}
-
-.toolkit-card:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-2px);
-}
-
-.toolkit-icon-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.toolkit-icon-badge {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  background-color: var(--accent-subtle);
-  color: var(--accent);
-  display: grid;
-  place-items: center;
-  font-size: 14px;
-}
-
-.toolkit-card h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 6px;
-}
-
-.toolkit-card p {
-  font-size: 12px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-
-.toolkit-action {
-  margin-top: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
 
 /* ==========================================================================
    Navigation Tabs: My Agents, Workflows, Efficiency, Success, Failures, etc.
@@ -1767,10 +1741,6 @@ body {
   
   .stats-metrics-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .toolkit-cards-grid {
-    grid-template-columns: 1fr;
   }
 }
 
