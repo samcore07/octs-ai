@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     model_name: str = "gemini-3.5-flash-lite"
     model_provider: str = "google_genai"
     model_temperature: float = 0.0
+    available_gemini_models: List[str] = [
+        "gemini-3.8-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3.6-flash",
+        "gemini-3.1-flash-lite",
+    ]
 
     # LangSmith Observability Settings
     langsmith_tracing: bool = False

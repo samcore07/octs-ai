@@ -21,7 +21,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=2.1">
+    <link rel="stylesheet" href="style.css?v=2.2">
 </head>
 <body>
     <div class="app-layout">
@@ -306,6 +306,19 @@
                         </button>
                     </div>
 
+                    <!-- Active Cohort Status Bar -->
+                    <div class="cohort-active-bar" id="cohortActiveBar">
+                        <div class="cohort-status-left">
+                            <span class="cohort-pulse-dot"></span>
+                            <span class="cohort-label">Active Cohort:</span>
+                            <strong id="cohortDisciplineTitle">Writers & Storytellers</strong>
+                            <span class="cohort-subtext" id="cohortSubtext">(4 Cohort Agents Active & Ready • 12 in Standby)</span>
+                        </div>
+                        <div class="cohort-agent-pills" id="cohortAgentPills">
+                            <!-- Populated dynamically by script.js -->
+                        </div>
+                    </div>
+
                     <!-- AI Harness Interaction Area -->
                     <div class="harness-interaction-panel">
                         <div class="panel-header">
@@ -411,6 +424,25 @@
                         <div id="output" class="console-content empty-state">Creative output will appear here after task execution...</div>
                     </div>
 
+                    <!-- Multi-Agent Orchestration & Multi-Model Execution Breakdown -->
+                    <div class="orchestration-trace-section" id="orchestrationTraceSection">
+                        <div class="section-heading-bar">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                <span class="section-title">Multi-Agent Orchestration & Model Trace</span>
+                                <span class="nav-badge" id="quotaProtectedBadge" style="background: rgba(16, 185, 129, 0.15); color: #10B981;">Token Quota Distributed</span>
+                            </div>
+                            <div class="model-pool-badge-group">
+                                <span class="pool-model-tag active" title="Assigned: Primary Creative Generation">gemini-3.8-flash</span>
+                                <span class="pool-model-tag active" title="Assigned: Intent Routing & Constraints">gemini-3.5-flash-lite</span>
+                                <span class="pool-model-tag active" title="Assigned: Craft Quality Evaluator">gemini-3.6-flash</span>
+                                <span class="pool-model-tag active" title="Assigned: Peer Review & Refinement">gemini-3.1-flash-lite</span>
+                            </div>
+                        </div>
+                        <div class="trace-steps-container" id="traceStepsContainer">
+                            <div class="empty-trace-hint">Execute a creative directive above to inspect step-by-step agent coordination, rubric scoring, and distributed Gemini model dispatch.</div>
+                        </div>
+                    </div>
+
                     <!-- Session History & Archived Answers Panel -->
                     <div class="session-history-section" id="sessionHistorySection">
                         <div class="section-heading-bar">
@@ -430,6 +462,6 @@
     </div>
 
     <!-- Core Application Logic -->
-    <script src="script.js?v=2.1" defer></script>
+    <script src="script.js?v=2.2" defer></script>
 </body>
 </html>

@@ -92,3 +92,4 @@ class OrchestrationState(TypedDict, total=False):
     prompt_tokens: Optional[int]
     completion_tokens: Optional[int]
     total_tokens: Optional[int]
+    agent_pipeline: Optional[List[Dict[str, Any]]]

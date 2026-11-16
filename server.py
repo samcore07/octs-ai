@@ -90,7 +90,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Primary LLM
+# Initialize Primary LLM & Resilient Free Tier Model Pool
+from backend.models.model_pool import GeminiModelPool, get_model_pool
+
 model_init_kwargs = {
     "model_provider": settings.model_provider,
     "api_key": settings.gemini_api_key,
@@ -102,6 +104,7 @@ model = init_chat_model(
     settings.model_name,
     **model_init_kwargs,
 )
+model_pool = get_model_pool(api_key=settings.gemini_api_key)
 
 # Initialize Agent Persona Router, Memory Manager & Orchestration Executor with Injected Dependencies
 router = AgentRouter()
@@ -128,6 +131,24 @@ def health_check():
         "supabase_configured": is_supabase_configured(),
         "uptime_seconds": detailed.uptime_seconds,
         "dependencies": [d.model_dump() for d in detailed.dependencies],
+    }
+
+
+@app.get("/api/models/pool")
+def get_model_pool_status():
+    """Returns available free Gemini models, failover protection status, and stage allocations."""
+    return {
+        "status": "ok",
+        "primary_model": settings.model_name,
+        "models": model_pool.list_available_models(),
+        "stages": {
+            "routing": "gemini-3.5-flash-lite",
+            "generation": "gemini-3.8-flash",
+            "evaluation": "gemini-3.6-flash",
+            "refinement": "gemini-3.1-flash-lite",
+        },
+        "token_limit_protection": "active",
+        "automatic_failover": True,
     }
 
 

@@ -1,11 +1,20 @@
 /**
  * Octs AI - Agents Controller
- * Manages category filtering, agent deployments, and live persona analytics.
+ * Manages discipline cohort activation, active vs standby status, and live persona analytics.
+ * In OCTS AI, agents are NOT manually deployed individually; choosing a mode activates
+ * its 4 specialized cohort agents, leaving other discipline agents on standby.
  */
+
+const DISCIPLINE_NAMES = {
+  writers: "Writers & Storytellers",
+  musicians: "Musicians & Singers",
+  creators: "Content Creators",
+  designers: "Visual Artists & Designers",
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   initFilterPills();
-  highlightCurrentRoleAgents();
+  restoreActiveCohortMode();
   loadAgentAnalytics();
 });
 
@@ -18,11 +27,15 @@ function initFilterPills() {
       pills.forEach(p => p.classList.remove("active"));
       pill.classList.add("active");
 
-      const filterCategory = pill.getAttribute("data-category");
+      const category = pill.getAttribute("data-category");
+
+      if (category !== "all") {
+        setActiveCohort(category);
+      }
 
       cards.forEach(card => {
         const cardCategory = card.getAttribute("data-category");
-        if (filterCategory === "all" || cardCategory === filterCategory) {
+        if (category === "all" || cardCategory === category) {
           card.style.display = "flex";
         } else {
           card.style.display = "none";
@@ -32,9 +45,52 @@ function initFilterPills() {
   });
 }
 
-function highlightCurrentRoleAgents() {
-  const savedRole = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role");
-  if (!savedRole) return;
+function setActiveCohort(discipline) {
+  if (!discipline || discipline === "all") return;
+
+  // Persist active discipline
+  localStorage.setItem("octs_ai_role", discipline);
+  localStorage.setItem("generative_clash_role", discipline);
+
+  // Update banner text
+  const titleEl = document.getElementById("activeModeTitle");
+  const subtextEl = document.getElementById("activeModeSubtext");
+  const niceName = DISCIPLINE_NAMES[discipline] || discipline;
+
+  if (titleEl) titleEl.textContent = niceName;
+  if (subtextEl) subtextEl.textContent = `(4 Cohort Agents Active & Ready • Other 12 Agents on Standby)`;
+
+  // Update card statuses across the grid
+  document.querySelectorAll(".agent-roster-card").forEach(card => {
+    const cardCategory = card.getAttribute("data-category");
+    const statusIndicator = card.querySelector(".agent-status-indicator");
+    const cohortTag = card.querySelector(".cohort-status-tag");
+
+    if (cardCategory === discipline) {
+      if (statusIndicator) {
+        statusIndicator.className = "agent-status-indicator";
+        statusIndicator.textContent = "● Active";
+      }
+      if (cohortTag) {
+        cohortTag.className = "cohort-status-tag active";
+        cohortTag.textContent = "Cohort Active";
+      }
+    } else {
+      if (statusIndicator) {
+        statusIndicator.className = "agent-status-indicator standby";
+        statusIndicator.textContent = "● Standby";
+      }
+      if (cohortTag) {
+        cohortTag.className = "cohort-status-tag standby";
+        cohortTag.textContent = "Standby";
+      }
+    }
+  });
+}
+
+function restoreActiveCohortMode() {
+  const savedRole = localStorage.getItem("octs_ai_role") || localStorage.getItem("generative_clash_role") || "writers";
+  setActiveCohort(savedRole);
 
   const matchingPill = document.querySelector(`.filter-pill[data-category="${savedRole}"]`);
   if (matchingPill) {
@@ -70,10 +126,3 @@ async function loadAgentAnalytics() {
     console.debug("Agent analytics load error:", e);
   }
 }
-
-function deployAgent(agentName, promptTemplate) {
-  sessionStorage.setItem("harness_auto_prompt", promptTemplate);
-  window.location.href = "../index.html";
-}
-
-window.deployAgent = deployAgent;

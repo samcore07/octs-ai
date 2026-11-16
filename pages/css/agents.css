@@ -105,6 +105,82 @@
   border-color: var(--warning-border);
 }
 
+.agent-status-indicator.standby {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border-color: var(--border-subtle);
+}
+
+.active-mode-banner {
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.active-mode-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.active-mode-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.active-mode-info strong {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.active-mode-subtext {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.active-mode-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--surface-alt);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.cohort-status-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.cohort-status-tag.active {
+  background: var(--success-subtle);
+  color: var(--success);
+  border: 1px solid var(--success-border);
+}
+
+.cohort-status-tag.standby {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+}
+
 .agent-desc {
   font-size: 13px;
   color: var(--text-secondary);

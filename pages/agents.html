@@ -153,6 +153,16 @@
                     <span class="telemetry-badge">● 4 Specialized Disciplines • 16 Active Model Endpoints</span>
                 </div>
 
+                <!-- Active Cohort Mode Indicator Banner -->
+                <div class="active-mode-banner" id="activeModeBanner">
+                    <div class="active-mode-info">
+                        <span class="active-mode-label">Active Discipline Cohort:</span>
+                        <strong id="activeModeTitle">Writers & Storytellers</strong>
+                        <span class="active-mode-subtext" id="activeModeSubtext">(4 Cohort Agents Active & Armed • Other 12 Specialists in Standby)</span>
+                    </div>
+                    <div class="active-mode-hint">Selecting a discipline automatically engages its cohort in the harness</div>
+                </div>
+
                 <!-- Filter Pills -->
                 <div class="agents-controls-bar">
                     <div class="category-filter-pills">
@@ -183,7 +193,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.8%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Narrative Architect', 'Narrative Architect: Audit this story outline for three-act pacing and character stakes...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag active">Cohort Active</span>
                         </div>
                     </div>
 
@@ -203,7 +213,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.9%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Lore Keeper', 'Lore Keeper: Scan this scene for worldbuilding contradictions and timeline paradoxes...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag active">Cohort Active</span>
                         </div>
                     </div>
 
@@ -223,7 +233,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.5%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Prose Stylist', 'Prose Stylist: Polish this dialogue exchange to remove exposition and increase subtext...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag active">Cohort Active</span>
                         </div>
                     </div>
 
@@ -243,7 +253,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.6%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Research Scout', 'Research Scout: Provide authentic historical context and sensory details for...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag active">Cohort Active</span>
                         </div>
                     </div>
 
@@ -254,7 +264,7 @@
                                 <h3>Lyricist & Meter Engine</h3>
                                 <span class="agent-category-tag">Musicians & Singers</span>
                             </div>
-                            <span class="agent-status-indicator">● Active</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Calculates syllabic stress, maps internal rhyme patterns, refines vowel resonance for singability, and ensures natural poetic cadence.</p>
                         <div class="agent-capabilities-list">
@@ -264,7 +274,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.4%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Lyricist Engine', 'Lyricist Engine: Refine the rhyme scheme and syllable meter of this verse...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -274,7 +284,7 @@
                                 <h3>Harmonic Arranger</h3>
                                 <span class="agent-category-tag">Musicians & Singers</span>
                             </div>
-                            <span class="agent-status-indicator armed">● Armed</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Recommends modal chord substitutions, secondary dominants, voice-leading pathways, and emotional key shifts.</p>
                         <div class="agent-capabilities-list">
@@ -284,7 +294,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.7%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Harmonic Arranger', 'Harmonic Arranger: Provide 3 modal chord substitutions for this progression...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -294,7 +304,7 @@
                                 <h3>Track Structure Architect</h3>
                                 <span class="agent-category-tag">Musicians & Singers</span>
                             </div>
-                            <span class="agent-status-indicator">● Active</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Builds dynamic song timelines, engineers pre-chorus tension builds, designs bridge contrast peaks, and prevents arrangement fatigue.</p>
                         <div class="agent-capabilities-list">
@@ -304,7 +314,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.5%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Structure Architect', 'Structure Architect: Construct an arrangement timeline with dynamic tension drops for...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -314,7 +324,7 @@
                                 <h3>Sonic Palette Curator</h3>
                                 <span class="agent-category-tag">Musicians & Singers</span>
                             </div>
-                            <span class="agent-status-indicator">● Standby</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Curates genre-crossover reference playlists, acoustic vs analog synthesizer palettes, and spatial mix aesthetics.</p>
                         <div class="agent-capabilities-list">
@@ -324,7 +334,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.3%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Sonic Curator', 'Sonic Curator: Suggest an instrumentation and production palette combining...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -335,7 +345,7 @@
                                 <h3>Hook & Retention Architect</h3>
                                 <span class="agent-category-tag">Content Creators</span>
                             </div>
-                            <span class="agent-status-indicator">● Active</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Drafts psychological opening hooks (Curiosity Gap, Counter-Intuitive Truth), audits 30-second pacing, and cuts dead air.</p>
                         <div class="agent-capabilities-list">
@@ -345,7 +355,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.6%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Retention Architect', 'Retention Architect: Draft 5 viral opening hooks for a video about...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -355,7 +365,7 @@
                                 <h3>Multi-Platform Transmuter</h3>
                                 <span class="agent-category-tag">Content Creators</span>
                             </div>
-                            <span class="agent-status-indicator armed">● Armed</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Adapts longform video scripts into punchy vertical video storyboards, 7-post high-engagement X threads, and newsletter summaries.</p>
                         <div class="agent-capabilities-list">
@@ -365,7 +375,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.8%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Transmuter', 'Multi-Platform Transmuter: Convert this video concept into an X thread and 2 short scripts...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -375,7 +385,7 @@
                                 <h3>Editorial Cadence Planner</h3>
                                 <span class="agent-category-tag">Content Creators</span>
                             </div>
-                            <span class="agent-status-indicator">● Active</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Orchestrates 30-day multi-channel publishing calendars, groups batch production schedules, and optimizes post cadence.</p>
                         <div class="agent-capabilities-list">
@@ -385,7 +395,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.4%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Cadence Planner', 'Cadence Planner: Build a 4-week thematic content schedule for...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -395,7 +405,7 @@
                                 <h3>Audience Friction Auditor</h3>
                                 <span class="agent-category-tag">Content Creators</span>
                             </div>
-                            <span class="agent-status-indicator">● Standby</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Scans scripts for cognitive overload, jargon fatigue, and weak calls-to-action to elevate click-through and completion rates.</p>
                         <div class="agent-capabilities-list">
@@ -405,7 +415,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.5%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Friction Auditor', 'Friction Auditor: Scan this script for pacing lulls, confusing phrasing, and weak CTAs...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -416,7 +426,7 @@
                                 <h3>Concept Ideation Engine</h3>
                                 <span class="agent-category-tag">Visual Artists & Designers</span>
                             </div>
-                            <span class="agent-status-indicator">● Active</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Synthesizes cross-disciplinary architectural references, industrial textures, abstract metaphors, and unexpected moodboard pairings.</p>
                         <div class="agent-capabilities-list">
@@ -426,7 +436,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.7%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Concept Engine', 'Concept Ideation Engine: Develop 4 distinct visual concepts combining Swiss tech with...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -436,7 +446,7 @@
                                 <h3>Visual System Auditor</h3>
                                 <span class="agent-category-tag">Visual Artists & Designers</span>
                             </div>
-                            <span class="agent-status-indicator armed">● Armed</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Verifies modular scale ratios, baseline grids, typographic hierarchies, optical balance, and responsive layout constraints.</p>
                         <div class="agent-capabilities-list">
@@ -446,7 +456,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.9%</span>
-                            <button class="deploy-btn" onclick="deployAgent('System Auditor', 'Visual System Auditor: Audit this layout concept for typography scale and optical hierarchy...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -456,7 +466,7 @@
                                 <h3>Art Direction Critic</h3>
                                 <span class="agent-category-tag">Visual Artists & Designers</span>
                             </div>
-                            <span class="agent-status-indicator">● Active</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Simulates rigorous design critiques, evaluating negative space distribution, focal hierarchy, and lighting tension.</p>
                         <div class="agent-capabilities-list">
@@ -466,7 +476,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.6%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Art Director', 'Art Direction Critic: Provide a rigorous critique of this visual composition focusing on...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
 
@@ -476,7 +486,7 @@
                                 <h3>Design Token & Palette Architect</h3>
                                 <span class="agent-category-tag">Visual Artists & Designers</span>
                             </div>
-                            <span class="agent-status-indicator">● Standby</span>
+                            <span class="agent-status-indicator standby">● Standby</span>
                         </div>
                         <p class="agent-desc">Calculates APCA/WCAG contrast ratios, builds semantic color scales, and generates design token documentation.</p>
                         <div class="agent-capabilities-list">
@@ -486,7 +496,7 @@
                         </div>
                         <div class="agent-meta-row">
                             <span>Reliability: 99.8%</span>
-                            <button class="deploy-btn" onclick="deployAgent('Token Architect', 'Design Token Architect: Create an accessible color palette and semantic tokens for...')">Deploy to Harness →</button>
+                            <span class="cohort-status-tag standby">Standby</span>
                         </div>
                     </div>
                 </div>
@@ -495,6 +505,6 @@
     </div>
 
     <script src="js/common.js" defer></script>
-    <script src="js/agents.js" defer></script>
+    <script src="js/agents.js?v=2.2" defer></script>
 </body>
 </html>

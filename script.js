@@ -417,6 +417,9 @@ function renderRoleWorkspace(roleKey) {
   if (titleEl) titleEl.textContent = data.title;
   if (descEl) descEl.textContent = data.description;
 
+  // Render Active Agent Cohort (Selected Mode Active, Others in Standby)
+  renderActiveCohort(roleKey);
+
   // Render Suggested Creative Directives (Interactive Cards)
   const promptsGrid = document.getElementById("suggestedPromptsGrid");
   if (promptsGrid && data.prompts) {
@@ -462,6 +465,64 @@ function renderRoleWorkspace(roleKey) {
   const chatInput = document.getElementById("chatInput");
   if (chatInput) {
     chatInput.placeholder = `Tell your AI harness what you're trying to create in ${data.title}...`;
+  }
+}
+
+// Cohort & Active Specialist Definitions
+const COHORT_DATA = {
+  writers: {
+    title: "Writers & Storytellers",
+    agents: [
+      { name: "Narrative Architect", role: "3-Act Beats & Stakes" },
+      { name: "Lore & Continuity Keeper", role: "Canon & Timeline Paradoxes" },
+      { name: "Prose Stylist & Dialogue Doctor", role: "Subtext & Sensory Polish" },
+      { name: "Research & Fact Scout", role: "Historical & Technical Nuance" },
+    ],
+  },
+  musicians: {
+    title: "Musicians & Singers",
+    agents: [
+      { name: "Lyricist & Meter Engine", role: "Syllabic Cadence & Rhyme" },
+      { name: "Harmonic Arranger", role: "Modal Interchange & Voicing" },
+      { name: "Track Structure Architect", role: "Arrangement & Dynamic Peaks" },
+      { name: "Sonic Palette Curator", role: "Genre Synthesis & Timbre" },
+    ],
+  },
+  creators: {
+    title: "Content Creators",
+    agents: [
+      { name: "Hook & Retention Architect", role: "First 3s Retention Hooks" },
+      { name: "Multi-Platform Transmuter", role: "Vertical & Thread Repurposing" },
+      { name: "Editorial Cadence Planner", role: "30-Day Batching Schedules" },
+      { name: "Audience Friction Auditor", role: "Cognitive Load & CTA Audit" },
+    ],
+  },
+  designers: {
+    title: "Visual Artists & Designers",
+    agents: [
+      { name: "Concept Ideation Engine", role: "Cross-Disciplinary Moodboards" },
+      { name: "Visual System Auditor", role: "Typographic Scale & Grids" },
+      { name: "Art Direction Critic", role: "Negative Space & Focal Hierarchy" },
+      { name: "Design Token & Palette Architect", role: "APCA Contrast & Semantic Scales" },
+    ],
+  },
+};
+
+function renderActiveCohort(roleKey) {
+  const cohort = COHORT_DATA[roleKey] || COHORT_DATA.writers;
+  const titleEl = document.getElementById("cohortDisciplineTitle");
+  const subtextEl = document.getElementById("cohortSubtext");
+  const pillsEl = document.getElementById("cohortAgentPills");
+
+  if (titleEl) titleEl.textContent = cohort.title;
+  if (subtextEl) subtextEl.textContent = `(4 Cohort Agents Active & Ready • 12 in Standby)`;
+  if (pillsEl) {
+    pillsEl.innerHTML = cohort.agents.map(ag => `
+      <span class="cohort-mini-pill active" title="${ag.role}">
+        <span class="dot"></span>
+        ${ag.name}
+      </span>
+    `).join("");
   }
 }
 
@@ -519,7 +580,8 @@ function saveToCreativeHistory(prompt, reply, metadata = {}) {
       role: currentRole || "writers",
       agent: metadata.agent || "Auto-Routed Lead",
       latency_ms: metadata.latency_ms || null,
-      model: metadata.model || "Gemini 3.5 Flash"
+      model: metadata.model || "Gemini 3.5 Flash",
+      agent_pipeline: metadata.agent_pipeline || null,
     };
 
     history.unshift(item);
@@ -601,6 +663,9 @@ function restoreHistoryItem(id) {
     }
     if (agentBadge) agentBadge.textContent = formatAgentDisplayName(found.agent);
     if (latencyBadge && found.latency_ms) latencyBadge.textContent = `${found.latency_ms}ms`;
+    if (found.agent_pipeline) {
+      renderOrchestrationTrace(found.agent_pipeline, found.latency_ms);
+    }
   } catch (e) {
     console.error("Failed to restore history item:", e);
   }
@@ -701,6 +766,63 @@ function renderMarkdown(text) {
   return safe;
 }
 
+function getModelPillClass(modelName) {
+  if (!modelName) return "model-35";
+  const m = modelName.toLowerCase();
+  if (m.includes("3.8")) return "model-38";
+  if (m.includes("3.6")) return "model-36";
+  if (m.includes("3.1")) return "model-31";
+  return "model-35";
+}
+
+function renderOrchestrationTrace(pipeline, latencyMs) {
+  const container = document.getElementById("traceStepsContainer");
+  if (!container) return;
+
+  if (!pipeline || !Array.isArray(pipeline) || pipeline.length === 0) {
+    container.innerHTML = `<div class="empty-trace-hint">No multi-agent trace available for this execution.</div>`;
+    return;
+  }
+
+  container.innerHTML = pipeline.map((step, idx) => {
+    const stepNum = idx + 1;
+    const modelPillClass = getModelPillClass(step.model);
+    const tokensText = step.tokens
+      ? `${step.tokens.prompt || 0} in / ${step.tokens.completion || 0} out (${step.tokens.total || 0} tokens)`
+      : "";
+    const durText = step.duration_ms ? `${step.duration_ms}ms` : "";
+
+    return `
+      <div class="trace-step-card">
+        <div class="trace-step-num-col">
+          <div class="step-circle">${stepNum}</div>
+          ${idx < pipeline.length - 1 ? '<div class="step-line"></div>' : ''}
+        </div>
+        <div class="trace-step-body">
+          <div class="step-agent-header">
+            <div class="step-agent-title-wrap">
+              <span class="step-agent-name">${escapeHtml(step.agent_name || "Specialist Agent")}</span>
+              <span class="step-agent-role">${escapeHtml(step.agent_role || "Agent")}</span>
+            </div>
+            <div class="step-model-pill ${modelPillClass}">
+              <span>⚡</span>
+              <span>${escapeHtml(step.model || "gemini-3.5-flash-lite")}</span>
+            </div>
+          </div>
+          <div class="step-action-desc">${escapeHtml(step.action || "")}</div>
+          <div class="step-meta-row">
+            <span class="step-status-tag">● ${escapeHtml(step.status || "Completed").toUpperCase()}</span>
+            <div class="step-metrics-badge">
+              ${tokensText ? `<span>${tokensText}</span> • ` : ""}
+              <span>${durText}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 async function submitTask() {
   const chatInput = document.getElementById("chatInput") || document.getElementById("promptInput");
   const outputDiv = document.getElementById("output");
@@ -726,6 +848,15 @@ async function submitTask() {
   if (outputDiv) {
     outputDiv.classList.remove("empty-state");
     outputDiv.textContent = "AI Creative Harness orchestrating agents...\nAnalyzing intent and formulating domain-specific execution plan...";
+  }
+
+  const traceContainer = document.getElementById("traceStepsContainer");
+  if (traceContainer) {
+    traceContainer.innerHTML = `
+      <div class="empty-trace-hint" style="color: var(--accent); font-weight: 500;">
+        ⚡ Multi-Agent Pipeline Activating: Coordinating specialists across Gemini free models (gemini-3.8-flash, gemini-3.5-flash-lite, gemini-3.6-flash, gemini-3.1-flash-lite)...
+      </div>
+    `;
   }
   if (consoleStatus) {
     consoleStatus.textContent = "● ORCHESTRATING (GEMINI)";
@@ -873,11 +1004,17 @@ async function submitTask() {
       }
     }
 
+    // Render Multi-Agent Orchestration & Model Dispatch Trace
+    if (data.agent_pipeline) {
+      renderOrchestrationTrace(data.agent_pipeline, data.latency_ms || elapsedMs);
+    }
+
     // Persist request and answer to session history archive
     saveToCreativeHistory(userInput, replyText, {
       agent: data.agent_used,
       latency_ms: data.latency_ms || elapsedMs,
-      model: data.model_used
+      model: data.model_used,
+      agent_pipeline: data.agent_pipeline,
     });
 
   } catch (error) {

@@ -3,7 +3,7 @@ Octs AI - Pydantic Request & Response Schemas
 Guarantees backward compatibility with frontend while preparing for structured agent outputs.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -82,6 +82,7 @@ class PromptResponse(BaseModel):
     evaluation: Optional[Dict[str, Any]] = Field(default=None, description="Structured evaluation payload containing independent Quality and Reliability metrics.")
     refinement: Optional[Dict[str, Any]] = Field(default=None, description="Structured autonomous refinement and peer review metadata.")
     memory: Optional[Dict[str, Any]] = Field(default=None, description="Structured persistent memory and context retrieval telemetry.")
+    agent_pipeline: Optional[List[Dict[str, Any]]] = Field(default=None, description="Detailed multi-agent orchestration and Gemini model execution trace.")
 
 
 class HealthResponse(BaseModel):
